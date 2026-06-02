@@ -1,10 +1,14 @@
 'use client'
 
 import { memo, useCallback, useState, useId, useEffect, useRef } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import type { JobWithResumes } from '@tailored/db'
 import { EvalStatusCell } from './EvalStatusCell'
 import { ResumeCell } from './ResumeCell'
 import { ExpandedJobRow } from './ExpandedJobRow'
+
+const VIRTUALIZE_THRESHOLD = 100
+const ESTIMATED_ROW_HEIGHT = 46
 
 const ARCHETYPE_STYLES: Record<string, string> = {
   LLMOps: 'bg-violet-500/15 text-violet-400',
@@ -42,6 +46,7 @@ export function JobTable({
   onUpdateNotes,
 }: JobTableProps) {
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   const handleToggleExpand = useCallback((id: string) => {
     setExpandedJobId((prev) => (prev === id ? null : id))
@@ -62,6 +67,17 @@ export function JobTable({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [expandedJobId])
 
+  // Virtualize only when above threshold and no row is expanded (expanded row has variable height)
+  const shouldVirtualize = jobs.length >= VIRTUALIZE_THRESHOLD && expandedJobId === null
+
+  const virtualizer = useVirtualizer({
+    count: jobs.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ESTIMATED_ROW_HEIGHT,
+    enabled: shouldVirtualize,
+    overscan: 10,
+  })
+
   if (jobs.length === 0) {
     return (
       <div
@@ -81,70 +97,99 @@ export function JobTable({
   const allSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id))
   const someSelected = visibleIds.some((id) => selectedIds.has(id))
 
+  const tableHead = (
+    <thead className="sticky top-0 bg-zinc-950 z-10">
+      <tr className="border-b border-zinc-800">
+        <th scope="col" className="w-10 px-3 py-2.5">
+          <input
+            type="checkbox"
+            aria-label="Select all visible jobs"
+            checked={allSelected}
+            ref={(el) => {
+              if (el) el.indeterminate = someSelected && !allSelected
+            }}
+            onChange={() => onToggleSelectAll(visibleIds)}
+            className="rounded border-zinc-600 bg-zinc-800 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-zinc-900"
+          />
+        </th>
+        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Company</th>
+        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Role</th>
+        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Source</th>
+        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Archetype</th>
+        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Eval</th>
+        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Resume</th>
+        <th scope="col" className="w-10 px-3 py-2.5"><span className="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+  )
+
+  const sharedCallbacks = {
+    onToggleExpand: handleToggleExpand,
+    onCollapse: handleCollapse,
+    onToggleSelect,
+    onArchive,
+    onDelete,
+    onUpdateStatus,
+    onUpdateNotes,
+  }
+
+  if (shouldVirtualize) {
+    const virtualItems = virtualizer.getVirtualItems()
+    const paddingTop = virtualItems.length > 0 ? virtualItems[0]!.start : 0
+    const paddingBottom =
+      virtualItems.length > 0
+        ? virtualizer.getTotalSize() - virtualItems[virtualItems.length - 1]!.end
+        : 0
+
+    return (
+      <div ref={scrollRef} className="overflow-auto flex-1">
+        <table role="grid" aria-label="Job tracker" className="w-full text-sm border-collapse">
+          {tableHead}
+          <tbody>
+            {paddingTop > 0 && (
+              <tr aria-hidden="true">
+                <td colSpan={COL_SPAN} style={{ height: paddingTop, padding: 0 }} />
+              </tr>
+            )}
+            {virtualItems.map((virtualRow) => {
+              const job = jobs[virtualRow.index]!
+              return (
+                <JobRowGroup
+                  key={job.id}
+                  job={job}
+                  selected={selectedIds.has(job.id)}
+                  activeStep={activeEvalSteps.get(job.id) ?? null}
+                  isExpanded={false}
+                  {...sharedCallbacks}
+                />
+              )
+            })}
+            {paddingBottom > 0 && (
+              <tr aria-hidden="true">
+                <td colSpan={COL_SPAN} style={{ height: paddingBottom, padding: 0 }} />
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   return (
-    <div className="overflow-auto flex-1">
-      <table
-        role="grid"
-        aria-label="Job tracker"
-        className="w-full text-sm border-collapse"
-      >
-        <thead className="sticky top-0 bg-zinc-950 z-10">
-          <tr className="border-b border-zinc-800">
-            <th scope="col" className="w-10 px-3 py-2.5">
-              <input
-                type="checkbox"
-                aria-label="Select all visible jobs"
-                checked={allSelected}
-                ref={(el) => {
-                  if (el) el.indeterminate = someSelected && !allSelected
-                }}
-                onChange={() => onToggleSelectAll(visibleIds)}
-                className="rounded border-zinc-600 bg-zinc-800 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-zinc-900"
-              />
-            </th>
-            <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">
-              Company
-            </th>
-            <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">
-              Role
-            </th>
-            <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">
-              Source
-            </th>
-            <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">
-              Archetype
-            </th>
-            <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">
-              Eval
-            </th>
-            <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">
-              Resume
-            </th>
-            <th scope="col" className="w-10 px-3 py-2.5">
-              <span className="sr-only">Actions</span>
-            </th>
-          </tr>
-        </thead>
+    <div ref={scrollRef} className="overflow-auto flex-1">
+      <table role="grid" aria-label="Job tracker" className="w-full text-sm border-collapse">
+        {tableHead}
         <tbody>
-          {jobs.map((job) => {
-            const isExpanded = expandedJobId === job.id
-            return (
-              <JobRowGroup
-                key={job.id}
-                job={job}
-                selected={selectedIds.has(job.id)}
-                activeStep={activeEvalSteps.get(job.id) ?? null}
-                isExpanded={isExpanded}
-                onToggleExpand={handleToggleExpand}
-                onCollapse={handleCollapse}
-                onToggleSelect={onToggleSelect}
-                onArchive={onArchive}
-                onDelete={onDelete}
-                onUpdateStatus={onUpdateStatus}
-                onUpdateNotes={onUpdateNotes}
-              />
-            )
-          })}
+          {jobs.map((job) => (
+            <JobRowGroup
+              key={job.id}
+              job={job}
+              selected={selectedIds.has(job.id)}
+              activeStep={activeEvalSteps.get(job.id) ?? null}
+              isExpanded={expandedJobId === job.id}
+              {...sharedCallbacks}
+            />
+          ))}
         </tbody>
       </table>
     </div>

@@ -15,6 +15,7 @@
     "@ag-ui/encoder": "^0.0.54",
     "@tailored/agents": "workspace:*",
     "@tailored/db": "workspace:*",
+    "@tanstack/react-virtual": "^3.14.2",
     "next": "16.2.7",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -22,6 +23,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.7",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
