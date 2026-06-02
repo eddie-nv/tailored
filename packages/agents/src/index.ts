@@ -1,1 +1,6 @@
-// barrel — populated in M2+
+export { BaseAgent } from './shared/base-agent'
+export { loadAppState } from './shared/state'
+export { claudeStreamToEvents } from './shared/transport'
+export { emitRunError, withAbort } from './shared/errors'
+export type { AppState } from './shared/state'
+export type { TransportOptions } from './shared/transport'
