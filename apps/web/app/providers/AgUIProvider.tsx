@@ -36,8 +36,6 @@ export function AgUIProvider({ url, children }: AgUIProviderProps) {
   return <AgUIContext.Provider value={ctx}>{children}</AgUIContext.Provider>
 }
 
-export function useAgUI(): AgUIContextValue {
-  const ctx = useContext(AgUIContext)
-  if (!ctx) throw new Error('useAgUI must be used inside AgUIProvider')
-  return ctx
+export function useAgUI(): AgUIContextValue | null {
+  return useContext(AgUIContext)
 }

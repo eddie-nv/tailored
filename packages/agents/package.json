@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./orchestrator": "./src/orchestrator/OrchestratorAgent.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
