@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useState, useRef, useCallback } from 'react'
-import { HttpAgent } from '@ag-ui/client'
+import { createAgent } from '@/app/lib/createAgent'
 import { EventType } from '@ag-ui/core'
 import type { BaseEvent } from '@ag-ui/core'
 
@@ -52,7 +52,7 @@ export const ResumeCell = memo(function ResumeCell({
     setSteps(CV_STEPS.map((name) => ({ name, status: 'pending' as StepStatus })))
 
     const threadId = crypto.randomUUID()
-    const agent = new HttpAgent({ url: '/api/agents/cv', threadId })
+    const agent = createAgent({ url: '/api/agents/cv', threadId })
 
     const obs$ = agent.run({
       threadId,
