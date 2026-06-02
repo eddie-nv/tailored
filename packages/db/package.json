@@ -1,0 +1,27 @@
+{
+  "name": "@tailored/db",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "prisma generate && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.9.0",
+    "prisma": "^6.9.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "vitest": "^3.2.0"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma"
+  }
+}
