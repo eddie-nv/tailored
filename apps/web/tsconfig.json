@@ -21,6 +21,11 @@
     "paths": {
       "@/*": ["./*"],
       "@tailored/agents": ["../../packages/agents/src/index.ts"],
+      "@tailored/agents/batch": ["../../packages/agents/src/batch/BatchAgent.ts"],
+      "@tailored/agents/scanner": ["../../packages/agents/src/scanner/ScannerAgent.ts"],
+      "@tailored/agents/evaluation": ["../../packages/agents/src/evaluation/EvaluationAgent.ts"],
+      "@tailored/agents/tracker": ["../../packages/agents/src/tracker/TrackerAgent.ts"],
+      "@tailored/agents/orchestrator": ["../../packages/agents/src/orchestrator/OrchestratorAgent.ts"],
       "@tailored/db": ["../../packages/db/src/index.ts"]
     }
   },
