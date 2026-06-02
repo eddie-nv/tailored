@@ -1,6 +1,7 @@
 node_modules
 .next
 .env
+!packages/db/.env
 *.db
 *.db-journal
 dist

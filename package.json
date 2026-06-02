@@ -2,12 +2,12 @@
   "name": "tailored",
   "private": true,
   "scripts": {
-    "dev": "pnpm -F web dev",
-    "build": "pnpm -F db build && pnpm -F agents build && pnpm -F web build",
+    "dev": "pnpm -F @tailored/web dev",
+    "build": "pnpm -F @tailored/db build && pnpm -F @tailored/agents build && pnpm -F @tailored/web build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
-    "db:migrate": "pnpm -F db exec prisma migrate dev",
-    "db:seed": "pnpm -F db exec prisma db seed",
+    "db:migrate": "pnpm -F @tailored/db run migrate",
+    "db:seed": "pnpm -F @tailored/db run seed",
     "test": "pnpm -r test"
   },
   "devDependencies": {
