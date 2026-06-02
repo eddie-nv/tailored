@@ -12,7 +12,7 @@ import { ScanInterruptModal } from '../results/ScanInterruptModal'
 import { InterruptToast } from '../results/InterruptToast'
 import { ResultsToolbar } from '../results/ResultsToolbar'
 import { JobTable } from '../results/JobTable'
-import type { Job } from '@tailored/db'
+import type { JobWithResumes } from '@tailored/db'
 
 export function ResultsTab() {
   const eval_ = useEvaluation()
@@ -38,7 +38,7 @@ export function ResultsTab() {
         archetype,
         cvMatchPct,
         status: 'reviewed',
-      } as Partial<Job> & { id: string })
+      } as Partial<JobWithResumes> & { id: string })
     }
 
     void tracker.refresh()

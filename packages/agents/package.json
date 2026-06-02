@@ -9,7 +9,8 @@
     "./evaluation": "./src/evaluation/EvaluationAgent.ts",
     "./tracker": "./src/tracker/TrackerAgent.ts",
     "./scanner": "./src/scanner/ScannerAgent.ts",
-    "./batch": "./src/batch/BatchAgent.ts"
+    "./batch": "./src/batch/BatchAgent.ts",
+    "./cv": "./src/cv/CVAgent.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -23,6 +24,7 @@
     "@ag-ui/encoder": "^0.0.54",
     "@anthropic-ai/sdk": "^0.39.0",
     "@tailored/db": "workspace:*",
+    "playwright": "^1.60.0",
     "rxjs": "7.8.1"
   },
   "devDependencies": {
