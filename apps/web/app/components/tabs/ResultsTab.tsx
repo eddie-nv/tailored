@@ -1,68 +1,141 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useEvaluation } from '@/app/hooks/useEvaluation'
+import { useTracker } from '@/app/hooks/useTracker'
 import { UrlPasteBar } from '../results/UrlPasteBar'
 import { EvalProgressPanel } from '../results/EvalProgressPanel'
 import { InterruptToast } from '../results/InterruptToast'
+import { ResultsToolbar } from '../results/ResultsToolbar'
+import { JobTable } from '../results/JobTable'
+import type { Job } from '@tailored/db'
 
 export function ResultsTab() {
-  const { state, evaluate, reset, dismissInterrupt } = useEvaluation()
+  const eval_ = useEvaluation()
+  const tracker = useTracker()
 
-  const isLoading = state.status === 'creating-job' || state.status === 'evaluating'
+  const pasteInputRef = useRef<{ focus: () => void } | null>(null)
+  const prevEvalJobId = useRef<string | null>(null)
+
+  // When an evaluation completes, upsert the job into the tracker's local state
+  useEffect(() => {
+    const { status, jobId } = eval_.state
+    if (status !== 'done' || !jobId || jobId === prevEvalJobId.current) return
+    prevEvalJobId.current = jobId
+
+    // Pull fresh data from the interrupt payload if available
+    const interrupt = eval_.state.interrupt
+    if (interrupt) {
+      const { score, archetype, cvMatchPct } = interrupt.metadata
+      tracker.upsertJob({
+        id: jobId,
+        score,
+        archetype,
+        cvMatchPct,
+        status: 'reviewed',
+      } as Partial<Job> & { id: string })
+    }
+
+    // Also refresh snapshot to pick up any fields not in the interrupt metadata
+    void tracker.refresh()
+  }, [eval_.state.status, eval_.state.jobId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isEvalLoading = eval_.state.status === 'creating-job' || eval_.state.status === 'evaluating'
 
   const handleConfirmInterrupt = useCallback(async () => {
-    if (!state.jobId) return
-    // Optimistically dismiss — TrackerAgent (M6) will own the status flow
-    dismissInterrupt()
-  }, [state.jobId, dismissInterrupt])
+    if (!eval_.state.jobId) return
+    await tracker.updateStatus(eval_.state.jobId, 'reviewed')
+    eval_.dismissInterrupt()
+  }, [eval_.state.jobId, eval_.dismissInterrupt, tracker])
+
+  const handleFocusPaste = useCallback(() => {
+    // Scroll to top of results tab and focus the paste bar
+    pasteInputRef.current?.focus()
+  }, [])
+
+  const visibleJobIds = tracker.visibleJobs.map((j) => j.id)
 
   return (
-    <div className="flex flex-col h-full">
-      <UrlPasteBar onSubmit={evaluate} isLoading={isLoading} />
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Paste bar */}
+      <UrlPasteBar onSubmit={eval_.evaluate} isLoading={isEvalLoading} ref={pasteInputRef} />
 
-      {state.status !== 'idle' && (
+      {/* Toolbar */}
+      <ResultsToolbar
+        selectedCount={tracker.state.selectedIds.size}
+        showArchived={tracker.state.showArchived}
+        onToggleArchived={tracker.setShowArchived}
+        onFocusPaste={handleFocusPaste}
+      />
+
+      {/* Eval progress panel */}
+      {eval_.state.status !== 'idle' && (
         <EvalProgressPanel
-          steps={state.steps}
-          streamedText={state.streamedText}
-          status={state.status}
-          error={state.error}
+          steps={eval_.state.steps}
+          streamedText={eval_.state.streamedText}
+          status={eval_.state.status}
+          error={eval_.state.error}
         />
       )}
 
-      {state.interrupt && (
+      {/* Interrupt toast */}
+      {eval_.state.interrupt && (
         <InterruptToast
-          interrupt={state.interrupt}
+          interrupt={eval_.state.interrupt}
           onConfirm={handleConfirmInterrupt}
-          onDismiss={dismissInterrupt}
+          onDismiss={eval_.dismissInterrupt}
         />
       )}
 
-      {state.status === 'idle' && (
-        <div className="flex flex-col items-center justify-center flex-1 text-zinc-500 gap-2 select-none px-6 text-center">
-          <span className="text-3xl" aria-hidden="true">
-            📊
-          </span>
-          <p className="text-sm font-medium text-zinc-400">No jobs evaluated yet</p>
-          <p className="text-xs">
-            Paste a job URL or description above to start an evaluation.
-            <br />
-            The full results table arrives in M6.
-          </p>
+      {/* Loading skeleton */}
+      {tracker.state.isLoading && (
+        <div
+          role="status"
+          aria-label="Loading jobs"
+          className="flex items-center justify-center flex-1 text-zinc-500 text-sm"
+        >
+          <svg
+            aria-hidden="true"
+            className="w-4 h-4 animate-spin mr-2 text-indigo-400"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          Loading jobs…
         </div>
       )}
 
-      {state.status === 'done' && !state.interrupt && (
-        <div className="flex flex-col items-center justify-center flex-1 text-zinc-500 gap-3 select-none">
-          <p className="text-sm text-zinc-400">Evaluation saved.</p>
+      {/* Error state */}
+      {!tracker.state.isLoading && tracker.state.error && (
+        <div
+          role="alert"
+          className="flex items-center justify-center flex-1 text-red-400 text-sm gap-2"
+        >
+          <span>✕</span>
+          <span>{tracker.state.error}</span>
           <button
             type="button"
-            onClick={reset}
-            className="text-xs text-indigo-400 hover:text-indigo-300 underline underline-offset-2"
+            onClick={tracker.refresh}
+            className="underline text-xs ml-1"
           >
-            Evaluate another job
+            Retry
           </button>
         </div>
+      )}
+
+      {/* Job table */}
+      {!tracker.state.isLoading && !tracker.state.error && (
+        <JobTable
+          jobs={tracker.visibleJobs}
+          selectedIds={tracker.state.selectedIds}
+          activeEvalSteps={tracker.state.activeEvalSteps}
+          onToggleSelect={tracker.toggleSelect}
+          onToggleSelectAll={tracker.toggleSelectAll}
+          onArchive={tracker.archiveJob}
+          onDelete={tracker.deleteJob}
+        />
       )}
     </div>
   )
