@@ -3,4 +3,5 @@ import { CVAgent } from '@tailored/agents/cv'
 
 const handler = createAgentHandler(() => new CVAgent())
 
-export { handler as GET, handler as POST }
+export const POST = handler
+export const OPTIONS = handler

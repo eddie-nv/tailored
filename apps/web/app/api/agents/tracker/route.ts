@@ -3,4 +3,5 @@ import { TrackerAgent } from '@tailored/agents/tracker'
 
 const handler = createAgentHandler(() => new TrackerAgent())
 
-export { handler as GET, handler as POST }
+export const POST = handler
+export const OPTIONS = handler

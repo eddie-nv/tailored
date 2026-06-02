@@ -3,4 +3,5 @@ import { EvaluationAgent } from '@tailored/agents/evaluation'
 
 const handler = createAgentHandler(() => new EvaluationAgent())
 
-export { handler as GET, handler as POST }
+export const POST = handler
+export const OPTIONS = handler
