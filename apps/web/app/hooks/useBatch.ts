@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { HttpAgent } from '@ag-ui/client'
+import { createAgent } from '@/app/lib/createAgent'
 import { EventType } from '@ag-ui/core'
 import type { BaseEvent } from '@ag-ui/core'
 
@@ -34,7 +34,7 @@ export function useBatch(
       setState({ status: 'running', total: jobIds.length, completed: 0, error: null })
 
       const threadId = crypto.randomUUID()
-      const agent = new HttpAgent({ url: '/api/agents/batch', threadId })
+      const agent = createAgent({ url: '/api/agents/batch', threadId })
 
       const obs$ = agent.run({
         threadId,

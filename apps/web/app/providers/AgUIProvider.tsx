@@ -1,7 +1,8 @@
 'use client'
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
-import { HttpAgent } from '@ag-ui/client'
+import { type HttpAgent } from '@ag-ui/client'
+import { createAgent } from '@/app/lib/createAgent'
 
 interface AgUIContextValue {
   agent: HttpAgent
@@ -30,7 +31,7 @@ export function AgUIProvider({ url, children }: AgUIProviderProps) {
   const ctx = useMemo<AgUIContextValue | null>(() => {
     if (typeof window === 'undefined') return null
     const threadId = getOrCreateThreadId()
-    return { agent: new HttpAgent({ url, threadId }), threadId }
+    return { agent: createAgent({ url, threadId }), threadId }
   }, [url])
 
   return <AgUIContext.Provider value={ctx}>{children}</AgUIContext.Provider>

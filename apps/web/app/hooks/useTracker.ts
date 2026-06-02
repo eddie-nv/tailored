@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { HttpAgent } from '@ag-ui/client'
+import { createAgent } from '@/app/lib/createAgent'
 import { EventType } from '@ag-ui/core'
 import type { BaseEvent } from '@ag-ui/core'
 import type { JobWithResumes } from '@tailored/db'
@@ -74,7 +74,7 @@ export function useTracker() {
   const runTrackerAction = useCallback(
     (action: TrackerAction, onDelta?: (patches: RfcPatch[]) => void): Promise<void> => {
       return new Promise((resolve, reject) => {
-        const agent = new HttpAgent({
+        const agent = createAgent({
           url: '/api/agents/tracker',
           threadId: threadId.current,
         })
