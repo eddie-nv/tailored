@@ -7,7 +7,59 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Stub model — full schema added in M1
-model Stub {
-  id Int @id
+model Profile {
+  id             String   @id @default(cuid())
+  cv             String
+  targetRoles    String   // JSON string[]
+  salaryMin      Int?
+  salaryMax      Int?
+  location       String?
+  workType       String?  // "remote"|"hybrid"|"onsite"
+  scoringWeights String   // JSON object
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model DiscoveryPrefs {
+  id         String   @id @default(cuid())
+  portals    String   // JSON string[] of portal keys
+  keywords   String   // JSON string[]
+  archetypes String   // JSON string[]
+  minScore   String?  // "A"|"B"|"C"|"D"|"F"
+  updatedAt  DateTime @updatedAt
+}
+
+model ResumePrefs {
+  id           String   @id @default(cuid())
+  template     String   @default("default")
+  sectionOrder String   // JSON string[]
+  tone         String?
+  keywords     String   // JSON string[]
+  updatedAt    DateTime @updatedAt
+}
+
+model Job {
+  id          String   @id @default(cuid())
+  company     String
+  role        String
+  url         String?  @unique
+  source      String   // "direct"|"scan"
+  archetype   String?
+  score       String?  // "A"|"B+"|"B"|"C"|"D"|"F"
+  cvMatchPct  Int?
+  evalReport  String?  // JSON: 6-block report object
+  status      String   @default("new")
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  resumes     GeneratedResume[]
+}
+
+model GeneratedResume {
+  id        String   @id @default(cuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  filename  String
+  path      String
+  createdAt DateTime @default(now())
 }
