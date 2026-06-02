@@ -1,12 +1,13 @@
 import { AbstractAgent } from '@ag-ui/client'
 import { EventType } from '@ag-ui/core'
-import type { RunAgentInput, BaseEvent } from '@ag-ui/core'
+import type { RunAgentInput, BaseEvent, RunFinishedOutcome } from '@ag-ui/core'
 import { Observable } from 'rxjs'
 import { randomUUID } from 'crypto'
 import { emitRunError, withAbort } from './errors'
 
 export abstract class BaseAgent extends AbstractAgent {
   private abortController: AbortController | null = null
+  protected runOutcome: RunFinishedOutcome | undefined
 
   protected abstract runSteps(
     input: RunAgentInput,
@@ -19,6 +20,7 @@ export abstract class BaseAgent extends AbstractAgent {
       const { signal } = this.abortController
       const runId = input.runId ?? randomUUID()
       const threadId = input.threadId
+      this.runOutcome = undefined
 
       const execute = async () => {
         subscriber.next({ type: EventType.RUN_STARTED, threadId, runId } as BaseEvent)
@@ -27,7 +29,12 @@ export abstract class BaseAgent extends AbstractAgent {
             subscriber.next(event)
           }
           if (!signal.aborted) {
-            subscriber.next({ type: EventType.RUN_FINISHED, threadId, runId } as BaseEvent)
+            subscriber.next({
+              type: EventType.RUN_FINISHED,
+              threadId,
+              runId,
+              ...(this.runOutcome ? { outcome: this.runOutcome } : {}),
+            } as BaseEvent)
           }
         } catch (err) {
           emitRunError(
