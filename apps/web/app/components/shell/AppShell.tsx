@@ -6,6 +6,7 @@ import { TabBar } from './TabBar'
 import type { Tab } from './TabBar'
 import { ConfigTab } from '../tabs/ConfigTab'
 import { ResultsTab } from '../tabs/ResultsTab'
+import { ErrorBoundary } from './ErrorBoundary'
 
 function TabContent({ tab }: { tab: Tab }) {
   if (tab === 'config') return <ConfigTab />
@@ -27,7 +28,9 @@ export function AppShell() {
           <span className="text-sm font-semibold tracking-tight text-zinc-900">Tailored</span>
           <span className="text-xs text-zinc-400 font-mono">AI</span>
         </div>
-        <ChatPanel />
+        <ErrorBoundary label="Chat panel error">
+          <ChatPanel />
+        </ErrorBoundary>
       </aside>
 
       {/* Main panel */}
@@ -43,7 +46,9 @@ export function AppShell() {
           aria-label={activeTab === 'config' ? 'Config' : 'Results'}
           className="flex-1 overflow-auto"
         >
-          <TabContent tab={activeTab} />
+          <ErrorBoundary label={activeTab === 'config' ? 'Config tab error' : 'Results tab error'}>
+            <TabContent tab={activeTab} />
+          </ErrorBoundary>
         </main>
       </div>
     </div>
