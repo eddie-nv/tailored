@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./orchestrator": "./src/orchestrator/OrchestratorAgent.ts",
-    "./evaluation": "./src/evaluation/EvaluationAgent.ts"
+    "./evaluation": "./src/evaluation/EvaluationAgent.ts",
+    "./tracker": "./src/tracker/TrackerAgent.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

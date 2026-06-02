@@ -1,15 +1,24 @@
 'use client'
 
-import { useState, useRef, type FormEvent } from 'react'
+import { useState, useRef, useImperativeHandle, type FormEvent } from 'react'
+
+export interface UrlPasteBarHandle {
+  focus: () => void
+}
 
 interface UrlPasteBarProps {
   onSubmit: (input: string) => void
   isLoading: boolean
+  ref?: React.Ref<UrlPasteBarHandle>
 }
 
-export function UrlPasteBar({ onSubmit, isLoading }: UrlPasteBarProps) {
+export function UrlPasteBar({ onSubmit, isLoading, ref }: UrlPasteBarProps) {
   const [value, setValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useImperativeHandle(ref, () => ({
+    focus: () => inputRef.current?.focus(),
+  }))
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -20,7 +29,7 @@ export function UrlPasteBar({ onSubmit, isLoading }: UrlPasteBarProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 p-3 border-b border-zinc-800">
+    <form onSubmit={handleSubmit} className="flex gap-2 p-3 border-b border-zinc-800 flex-shrink-0">
       <input
         ref={inputRef}
         type="text"
