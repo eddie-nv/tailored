@@ -1,9 +1,10 @@
 'use client'
 
-import { memo, useCallback, useState } from 'react'
+import { memo, useCallback, useState, useId, useEffect, useRef } from 'react'
 import type { JobWithResumes } from '@tailored/db'
 import { EvalStatusCell } from './EvalStatusCell'
 import { ResumeCell } from './ResumeCell'
+import { ExpandedJobRow } from './ExpandedJobRow'
 
 const ARCHETYPE_STYLES: Record<string, string> = {
   LLMOps: 'bg-violet-500/15 text-violet-400',
@@ -14,6 +15,9 @@ const ARCHETYPE_STYLES: Record<string, string> = {
   Transformation: 'bg-amber-500/15 text-amber-400',
 }
 
+// Total number of columns in the table (used for colSpan on expanded row)
+const COL_SPAN = 8
+
 interface JobTableProps {
   jobs: JobWithResumes[]
   selectedIds: Set<string>
@@ -22,6 +26,8 @@ interface JobTableProps {
   onToggleSelectAll: (visibleIds: string[]) => void
   onArchive: (id: string) => void
   onDelete: (id: string) => void
+  onUpdateStatus: (jobId: string, status: string) => Promise<void>
+  onUpdateNotes: (jobId: string, notes: string) => Promise<void>
 }
 
 export function JobTable({
@@ -32,7 +38,30 @@ export function JobTable({
   onToggleSelectAll,
   onArchive,
   onDelete,
+  onUpdateStatus,
+  onUpdateNotes,
 }: JobTableProps) {
+  const [expandedJobId, setExpandedJobId] = useState<string | null>(null)
+
+  const handleToggleExpand = useCallback((id: string) => {
+    setExpandedJobId((prev) => (prev === id ? null : id))
+  }, [])
+
+  const handleCollapse = useCallback(() => {
+    setExpandedJobId(null)
+  }, [])
+
+  // Keyboard: Escape collapses the expanded row
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && expandedJobId !== null) {
+        setExpandedJobId(null)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [expandedJobId])
+
   if (jobs.length === 0) {
     return (
       <div
@@ -96,136 +125,216 @@ export function JobTable({
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-800/60">
-          {jobs.map((job) => (
-            <JobRow
-              key={job.id}
-              job={job}
-              selected={selectedIds.has(job.id)}
-              activeStep={activeEvalSteps.get(job.id) ?? null}
-              onToggleSelect={onToggleSelect}
-              onArchive={onArchive}
-              onDelete={onDelete}
-            />
-          ))}
+        <tbody>
+          {jobs.map((job) => {
+            const isExpanded = expandedJobId === job.id
+            return (
+              <JobRowGroup
+                key={job.id}
+                job={job}
+                selected={selectedIds.has(job.id)}
+                activeStep={activeEvalSteps.get(job.id) ?? null}
+                isExpanded={isExpanded}
+                onToggleExpand={handleToggleExpand}
+                onCollapse={handleCollapse}
+                onToggleSelect={onToggleSelect}
+                onArchive={onArchive}
+                onDelete={onDelete}
+                onUpdateStatus={onUpdateStatus}
+                onUpdateNotes={onUpdateNotes}
+              />
+            )
+          })}
         </tbody>
       </table>
     </div>
   )
 }
 
-interface JobRowProps {
+interface JobRowGroupProps {
   job: JobWithResumes
   selected: boolean
   activeStep: string | null
+  isExpanded: boolean
+  onToggleExpand: (id: string) => void
+  onCollapse: () => void
   onToggleSelect: (id: string) => void
   onArchive: (id: string) => void
   onDelete: (id: string) => void
+  onUpdateStatus: (jobId: string, status: string) => Promise<void>
+  onUpdateNotes: (jobId: string, notes: string) => Promise<void>
 }
 
-const JobRow = memo(function JobRow({
+const JobRowGroup = memo(function JobRowGroup({
   job,
   selected,
   activeStep,
+  isExpanded,
+  onToggleExpand,
+  onCollapse,
   onToggleSelect,
   onArchive,
   onDelete,
-}: JobRowProps) {
+  onUpdateStatus,
+  onUpdateNotes,
+}: JobRowGroupProps) {
+  const panelId = useId()
+  const rowRef = useRef<HTMLTableRowElement>(null)
   const evaluated = job.score !== null && job.status !== 'new'
-  // Use most recently generated resume if present
   const latestResume = job.resumes.length > 0
     ? job.resumes[job.resumes.length - 1]!
     : null
   const resumeDownloadUrl = latestResume ? `/api/resumes/${latestResume.id}` : null
   const resumeFilename = latestResume?.filename ?? null
 
+  const handleRowClick = useCallback(
+    (e: React.MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (
+        target.closest('input[type="checkbox"]') ||
+        target.closest('a') ||
+        target.closest('button') ||
+        target.closest('select')
+      ) {
+        return
+      }
+      onToggleExpand(job.id)
+    },
+    [job.id, onToggleExpand],
+  )
+
+  const handleRowKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        onToggleExpand(job.id)
+      }
+    },
+    [job.id, onToggleExpand],
+  )
+
   return (
-    <tr
-      aria-selected={selected}
-      className={`group transition-colors ${
-        selected ? 'bg-indigo-500/5' : 'hover:bg-zinc-800/40'
-      } ${job.status === 'archived' ? 'opacity-50' : ''}`}
-    >
-      {/* Checkbox */}
-      <td className="px-3 py-2.5">
-        <input
-          type="checkbox"
-          aria-label={`Select ${job.company} — ${job.role}`}
-          checked={selected}
-          onChange={() => onToggleSelect(job.id)}
-          className="rounded border-zinc-600 bg-zinc-800 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-zinc-900"
-        />
-      </td>
+    <>
+      <tr
+        ref={rowRef}
+        tabIndex={0}
+        aria-selected={selected}
+        aria-expanded={isExpanded}
+        aria-controls={isExpanded ? panelId : undefined}
+        onClick={handleRowClick}
+        onKeyDown={handleRowKeyDown}
+        className={`
+          group transition-colors cursor-pointer outline-none
+          focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-indigo-500/60
+          ${selected ? 'bg-indigo-500/5' : 'hover:bg-zinc-800/40'}
+          ${isExpanded ? 'bg-zinc-800/20' : ''}
+          ${job.status === 'archived' ? 'opacity-50' : ''}
+          border-b border-zinc-800/60
+        `}
+      >
+        {/* Checkbox */}
+        <td className="px-3 py-2.5">
+          <input
+            type="checkbox"
+            aria-label={`Select ${job.company} — ${job.role}`}
+            checked={selected}
+            onChange={() => onToggleSelect(job.id)}
+            className="rounded border-zinc-600 bg-zinc-800 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-zinc-900"
+          />
+        </td>
 
-      {/* Company */}
-      <td className="px-3 py-2.5 font-medium text-zinc-200 max-w-[160px] truncate">
-        {job.company}
-      </td>
+        {/* Company — with expand chevron */}
+        <td className="px-3 py-2.5 font-medium text-zinc-200 max-w-[160px]">
+          <div className="flex items-center gap-1.5 truncate">
+            <svg
+              aria-hidden="true"
+              className={`w-3 h-3 shrink-0 text-zinc-600 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+            <span className="truncate">{job.company}</span>
+          </div>
+        </td>
 
-      {/* Role */}
-      <td className="px-3 py-2.5 text-zinc-300 max-w-[200px] truncate">
-        {job.url ? (
-          <a
-            href={job.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-indigo-300 transition-colors"
-          >
-            {job.role}
-          </a>
-        ) : (
-          job.role
-        )}
-      </td>
+        {/* Role */}
+        <td className="px-3 py-2.5 text-zinc-300 max-w-[200px] truncate">
+          {job.url ? (
+            <a
+              href={job.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-indigo-300 transition-colors"
+            >
+              {job.role}
+            </a>
+          ) : (
+            job.role
+          )}
+        </td>
 
-      {/* Source badge */}
-      <td className="px-3 py-2.5">
-        <span
-          className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${
-            job.source === 'scan'
-              ? 'bg-zinc-700 text-zinc-300'
-              : 'bg-zinc-800 text-zinc-400'
-          }`}
-        >
-          {job.source}
-        </span>
-      </td>
-
-      {/* Archetype chip */}
-      <td className="px-3 py-2.5">
-        {job.archetype ? (
+        {/* Source badge */}
+        <td className="px-3 py-2.5">
           <span
             className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${
-              ARCHETYPE_STYLES[job.archetype] ?? 'bg-zinc-700/50 text-zinc-400'
+              job.source === 'scan'
+                ? 'bg-zinc-700 text-zinc-300'
+                : 'bg-zinc-800 text-zinc-400'
             }`}
           >
-            {job.archetype}
+            {job.source}
           </span>
-        ) : (
-          <span className="text-zinc-700 text-xs">—</span>
-        )}
-      </td>
+        </td>
 
-      {/* Eval status */}
-      <td className="px-3 py-2.5">
-        <EvalStatusCell score={job.score} status={job.status} activeStep={activeStep} />
-      </td>
+        {/* Archetype chip */}
+        <td className="px-3 py-2.5">
+          {job.archetype ? (
+            <span
+              className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${
+                ARCHETYPE_STYLES[job.archetype] ?? 'bg-zinc-700/50 text-zinc-400'
+              }`}
+            >
+              {job.archetype}
+            </span>
+          ) : (
+            <span className="text-zinc-700 text-xs">—</span>
+          )}
+        </td>
 
-      {/* Resume */}
-      <td className="px-3 py-2.5">
-        <ResumeCell
-          evaluated={evaluated}
-          resumeDownloadUrl={resumeDownloadUrl}
-          resumeFilename={resumeFilename}
-          jobId={job.id}
-        />
-      </td>
+        {/* Eval status */}
+        <td className="px-3 py-2.5">
+          <EvalStatusCell score={job.score} status={job.status} activeStep={activeStep} />
+        </td>
 
-      {/* Actions */}
-      <td className="px-3 py-2.5">
-        <ActionMenu job={job} onArchive={onArchive} onDelete={onDelete} />
-      </td>
-    </tr>
+        {/* Resume */}
+        <td className="px-3 py-2.5">
+          <ResumeCell
+            evaluated={evaluated}
+            resumeDownloadUrl={resumeDownloadUrl}
+            resumeFilename={resumeFilename}
+            jobId={job.id}
+          />
+        </td>
+
+        {/* Actions */}
+        <td className="px-3 py-2.5">
+          <ActionMenu job={job} onArchive={onArchive} onDelete={onDelete} />
+        </td>
+      </tr>
+
+      <ExpandedJobRow
+        job={job}
+        isExpanded={isExpanded}
+        colSpan={COL_SPAN}
+        onCollapse={onCollapse}
+        onUpdateStatus={onUpdateStatus}
+        onUpdateNotes={onUpdateNotes}
+        onArchive={onArchive}
+      />
+    </>
   )
 })
 

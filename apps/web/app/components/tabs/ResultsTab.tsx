@@ -193,6 +193,8 @@ export function ResultsTab() {
           onToggleSelectAll={tracker.toggleSelectAll}
           onArchive={tracker.archiveJob}
           onDelete={tracker.deleteJob}
+          onUpdateStatus={tracker.updateStatus}
+          onUpdateNotes={tracker.updateNotes}
         />
       )}
 
