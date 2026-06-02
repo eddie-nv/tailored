@@ -1,0 +1,97 @@
+'use client'
+
+import { memo, useState, useCallback } from 'react'
+
+const STATUS_OPTIONS = [
+  { value: 'new', label: 'New' },
+  { value: 'reviewed', label: 'Reviewed' },
+  { value: 'applying', label: 'Applying' },
+  { value: 'applied', label: 'Applied' },
+  { value: 'archived', label: 'Archived' },
+] as const
+
+type JobStatus = (typeof STATUS_OPTIONS)[number]['value']
+
+const STATUS_STYLES: Record<string, string> = {
+  new: 'text-zinc-400 bg-zinc-800 border-zinc-700',
+  reviewed: 'text-blue-300 bg-blue-900/30 border-blue-700/50',
+  applying: 'text-amber-300 bg-amber-900/30 border-amber-700/50',
+  applied: 'text-emerald-300 bg-emerald-900/30 border-emerald-700/50',
+  archived: 'text-zinc-500 bg-zinc-900 border-zinc-700',
+}
+
+interface StatusDropdownProps {
+  jobId: string
+  status: string
+  onUpdate: (jobId: string, status: string) => Promise<void>
+}
+
+export const StatusDropdown = memo(function StatusDropdown({
+  jobId,
+  status,
+  onUpdate,
+}: StatusDropdownProps) {
+  const [isSaving, setIsSaving] = useState(false)
+  const [localStatus, setLocalStatus] = useState(status)
+
+  const handleChange = useCallback(
+    async (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const newStatus = e.target.value as JobStatus
+      const prevStatus = localStatus
+      setLocalStatus(newStatus)
+      setIsSaving(true)
+      try {
+        await onUpdate(jobId, newStatus)
+      } catch {
+        setLocalStatus(prevStatus)
+      } finally {
+        setIsSaving(false)
+      }
+    },
+    [jobId, localStatus, onUpdate],
+  )
+
+  const styleClass = STATUS_STYLES[localStatus] ?? STATUS_STYLES['new']!
+
+  return (
+    <div className="flex items-center gap-2">
+      <label className="text-xs text-zinc-500 font-medium shrink-0">Status</label>
+      <div className="relative">
+        <select
+          value={localStatus}
+          onChange={handleChange}
+          disabled={isSaving}
+          aria-label="Job status"
+          className={`
+            appearance-none rounded border px-2.5 py-1 pr-6 text-xs font-medium
+            focus:outline-none focus:ring-1 focus:ring-indigo-500/60
+            disabled:opacity-50 disabled:cursor-not-allowed
+            transition-colors cursor-pointer
+            ${styleClass}
+          `}
+        >
+          {STATUS_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value} className="bg-zinc-900 text-zinc-200">
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2"
+        >
+          {isSaving ? (
+            <svg className="w-3 h-3 animate-spin text-current opacity-60" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          ) : (
+            <svg className="w-3 h-3 text-current opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+})
