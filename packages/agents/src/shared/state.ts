@@ -1,7 +1,8 @@
-import type { PrismaClient, Profile, DiscoveryPrefs, ResumePrefs, Job } from '@tailored/db'
+import type { PrismaClient, Profile, DiscoveryPrefs, ResumePrefs } from '@tailored/db'
+import type { JobWithResumes } from '@tailored/db'
 
 export interface AppState {
-  jobs: Job[]
+  jobs: JobWithResumes[]
   profile: Profile | null
   discoveryPrefs: DiscoveryPrefs | null
   resumePrefs: ResumePrefs | null
@@ -16,7 +17,7 @@ export async function loadAppState(db: PrismaClient): Promise<AppState> {
   ])
 
   return {
-    jobs,
+    jobs: jobs as JobWithResumes[],
     profile: profiles,
     discoveryPrefs,
     resumePrefs,

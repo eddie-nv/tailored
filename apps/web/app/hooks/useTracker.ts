@@ -4,15 +4,28 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { HttpAgent } from '@ag-ui/client'
 import { EventType } from '@ag-ui/core'
 import type { BaseEvent } from '@ag-ui/core'
-import type { Job } from '@tailored/db'
+import type { JobWithResumes } from '@tailored/db'
 
 type RfcPatch = { op: 'replace' | 'remove' | 'add'; path: string; value?: unknown }
 
-function applyPatches(jobs: Job[], patches: RfcPatch[]): Job[] {
+function applyPatches(jobs: JobWithResumes[], patches: RfcPatch[]): JobWithResumes[] {
   return patches.reduce((acc, patch) => {
     // Handle full jobs array replacement (used by deleteJob)
     if (patch.path === '/jobs' && patch.op === 'remove' && Array.isArray(patch.value)) {
-      return patch.value as Job[]
+      return patch.value as JobWithResumes[]
+    }
+
+    // Handle /jobs/N/resumes/M add (CVAgent STATE_DELTA)
+    const resumeMatch = /^\/jobs\/(\d+)\/resumes\/(\d+)$/.exec(patch.path)
+    if (resumeMatch && patch.op === 'add') {
+      const idx = parseInt(resumeMatch[1]!, 10)
+      return acc.map((job, i) => {
+        if (i !== idx) return job
+        return {
+          ...job,
+          resumes: [...job.resumes, patch.value as JobWithResumes['resumes'][number]],
+        }
+      })
     }
 
     // Handle /jobs/N/field replace
@@ -37,7 +50,7 @@ export interface ActiveEvalStep {
 }
 
 export interface TrackerState {
-  jobs: Job[]
+  jobs: JobWithResumes[]
   isLoading: boolean
   error: string | null
   showArchived: boolean
@@ -81,7 +94,7 @@ export function useTracker() {
               const e = event as BaseEvent & Record<string, unknown>
 
               if (e.type === EventType.STATE_SNAPSHOT) {
-                const snapshot = e.snapshot as { jobs?: Job[] } | undefined
+                const snapshot = e.snapshot as { jobs?: JobWithResumes[] } | undefined
                 setState((s) => ({
                   ...s,
                   jobs: snapshot?.jobs ?? [],
@@ -195,7 +208,7 @@ export function useTracker() {
   )
 
   // Called by ResultsTab when EvaluationAgent finishes
-  const upsertJob = useCallback((update: Partial<Job> & { id: string }) => {
+  const upsertJob = useCallback((update: Partial<JobWithResumes> & { id: string }) => {
     setState((s) => {
       const exists = s.jobs.some((j) => j.id === update.id)
       if (exists) {

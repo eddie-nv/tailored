@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useCallback, useState } from 'react'
-import type { Job } from '@tailored/db'
+import type { JobWithResumes } from '@tailored/db'
 import { EvalStatusCell } from './EvalStatusCell'
 import { ResumeCell } from './ResumeCell'
 
@@ -15,7 +15,7 @@ const ARCHETYPE_STYLES: Record<string, string> = {
 }
 
 interface JobTableProps {
-  jobs: Job[]
+  jobs: JobWithResumes[]
   selectedIds: Set<string>
   activeEvalSteps: Map<string, string>
   onToggleSelect: (id: string) => void
@@ -115,7 +115,7 @@ export function JobTable({
 }
 
 interface JobRowProps {
-  job: Job
+  job: JobWithResumes
   selected: boolean
   activeStep: string | null
   onToggleSelect: (id: string) => void
@@ -132,7 +132,12 @@ const JobRow = memo(function JobRow({
   onDelete,
 }: JobRowProps) {
   const evaluated = job.score !== null && job.status !== 'new'
-  const hasResume = false // populated in M9
+  // Use most recently generated resume if present
+  const latestResume = job.resumes.length > 0
+    ? job.resumes[job.resumes.length - 1]!
+    : null
+  const resumeDownloadUrl = latestResume ? `/api/resumes/${latestResume.id}` : null
+  const resumeFilename = latestResume?.filename ?? null
 
   return (
     <tr
@@ -208,7 +213,12 @@ const JobRow = memo(function JobRow({
 
       {/* Resume */}
       <td className="px-3 py-2.5">
-        <ResumeCell evaluated={evaluated} hasResume={hasResume} jobId={job.id} />
+        <ResumeCell
+          evaluated={evaluated}
+          resumeDownloadUrl={resumeDownloadUrl}
+          resumeFilename={resumeFilename}
+          jobId={job.id}
+        />
       </td>
 
       {/* Actions */}
@@ -224,7 +234,7 @@ function ActionMenu({
   onArchive,
   onDelete,
 }: {
-  job: Job
+  job: JobWithResumes
   onArchive: (id: string) => void
   onDelete: (id: string) => void
 }) {
