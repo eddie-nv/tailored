@@ -3,4 +3,5 @@ import { ScannerAgent } from '@tailored/agents/scanner'
 
 const handler = createAgentHandler(() => new ScannerAgent())
 
-export { handler as GET, handler as POST }
+export const POST = handler
+export const OPTIONS = handler

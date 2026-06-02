@@ -2,11 +2,15 @@ import { RunAgentInputSchema } from '@ag-ui/core'
 import { EventEncoder } from '@ag-ui/encoder'
 import type { BaseAgent } from '@tailored/agents'
 import { corsHeaders, handlePreflight } from './cors'
+import { checkRateLimit } from './rate-limit'
 
 export function createAgentHandler(agentFactory: () => BaseAgent) {
   return async function handler(req: Request): Promise<Response> {
     const preflight = handlePreflight(req)
     if (preflight) return preflight
+
+    const rateLimited = checkRateLimit(req)
+    if (rateLimited) return rateLimited
 
     let body: unknown
     try {
