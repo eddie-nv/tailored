@@ -23,8 +23,7 @@ export function InterruptToast({ interrupt, onConfirm, onDismiss }: InterruptToa
 
   return (
     <div
-      role="alertdialog"
-      aria-modal="false"
+      role="alert"
       aria-labelledby="interrupt-title"
       aria-describedby="interrupt-desc"
       className="mx-3 mb-3 rounded border border-zinc-700 bg-zinc-900 overflow-hidden"

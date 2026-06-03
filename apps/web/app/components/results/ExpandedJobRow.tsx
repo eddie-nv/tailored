@@ -48,7 +48,7 @@ export const ExpandedJobRow = memo(function ExpandedJobRow({
             id={panelId}
             role="region"
             aria-label="Job details"
-            aria-hidden={!isExpanded}
+            inert={!isExpanded}
             className="
               mx-3 mb-3 rounded-lg
               border border-zinc-700/50
