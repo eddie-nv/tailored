@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useId } from 'react'
 import type { ReactNode } from 'react'
 import { SaveIndicator } from './SaveIndicator'
 import type { SaveStatus } from './SaveIndicator'
@@ -18,6 +18,7 @@ export function CollapsibleSection({
   defaultOpen = true,
   children,
 }: Props) {
+  const panelId = useId()
   const [isOpen, setIsOpen] = useState(defaultOpen)
 
   return (
@@ -26,6 +27,7 @@ export function CollapsibleSection({
         type="button"
         onClick={() => setIsOpen((o) => !o)}
         aria-expanded={isOpen}
+        aria-controls={panelId}
         className="flex items-center justify-between w-full px-6 py-4 text-left hover:bg-[var(--surface)] transition-colors"
       >
         <span className="text-sm font-semibold text-zinc-900 tracking-tight">{title}</span>
@@ -44,6 +46,7 @@ export function CollapsibleSection({
         </div>
       </button>
       <div
+        id={panelId}
         style={{
           overflow: 'hidden',
           maxHeight: isOpen ? '4000px' : '0',
