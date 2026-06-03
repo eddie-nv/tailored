@@ -10,5 +10,9 @@ export function SaveIndicator({ status }: Props) {
   const color =
     status === 'saving' ? 'text-zinc-400' : status === 'saved' ? 'text-emerald-600' : 'text-red-500'
 
-  return <span className={`text-[11px] font-medium ${color}`}>{label}</span>
+  return (
+    <span role="status" aria-live="polite" className={`text-[11px] font-medium ${color}`}>
+      {label}
+    </span>
+  )
 }

@@ -90,15 +90,15 @@ export function DiscoverySection() {
   return (
     <CollapsibleSection title="Discovery" saveStatus={saveStatus}>
       <div className="space-y-6">
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-widest text-zinc-400 mb-3">
+        <fieldset>
+          <legend className="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 mb-3">
             Portals
-          </p>
+          </legend>
           <PortalChecklist
             value={form.portals}
             onChange={(v) => handleChange('portals', v)}
           />
-        </div>
+        </fieldset>
 
         <TagInput
           label="Keywords"

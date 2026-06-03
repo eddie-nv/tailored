@@ -84,6 +84,7 @@ export function SectionOrderList({ sections, onChange }: Props) {
     <>
     <div className="space-y-1.5" role="list" aria-label="Resume section order">
       {sections.map((section, index) => (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- tabIndex+onKeyDown make this interactive; rule doesn't recognise listitem+tabIndex combo
         <div
           key={section}
           role="listitem"

@@ -56,7 +56,7 @@ export const EvalStatusCell = memo(function EvalStatusCell({
     const style = SCORE_STYLES[score] ?? SCORE_STYLES['C']!
     return (
       <span
-        aria-label={`Score ${score}`}
+        aria-label={`Match score: ${score} (A is best, F is worst)`}
         className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${style}`}
       >
         {score}

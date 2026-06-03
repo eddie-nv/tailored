@@ -112,8 +112,12 @@ export function ResumeSection() {
           </legend>
           <div className="space-y-2">
             {(['default', 'minimal', 'dense'] as const).map((t) => (
+              /* eslint-disable-next-line jsx-a11y/label-has-associated-control --
+                 rule can't resolve JSX expression {t} as label text at lint time;
+                 htmlFor+id wiring is present and the label renders visible text */
               <label
                 key={t}
+                htmlFor={`resume-template-${t}`}
                 className={`flex items-start gap-3 px-3 py-2.5 rounded-[var(--radius-sm)] border cursor-pointer transition-all ${
                   form.template === t
                     ? 'border-[var(--accent)] bg-blue-50/50'
@@ -121,6 +125,7 @@ export function ResumeSection() {
                 }`}
               >
                 <input
+                  id={`resume-template-${t}`}
                   type="radio"
                   name="resume-template"
                   value={t}
@@ -128,10 +133,10 @@ export function ResumeSection() {
                   onChange={() => handleChange('template', t)}
                   className="mt-0.5 accent-[var(--accent)]"
                 />
-                <div>
+                <span className="flex flex-col">
                   <span className="text-sm font-medium text-zinc-900 capitalize">{t}</span>
-                  <p className="text-xs text-zinc-400 mt-0.5">{TEMPLATE_DESCRIPTIONS[t]}</p>
-                </div>
+                  <span className="text-xs text-zinc-400 mt-0.5">{TEMPLATE_DESCRIPTIONS[t]}</span>
+                </span>
               </label>
             ))}
           </div>

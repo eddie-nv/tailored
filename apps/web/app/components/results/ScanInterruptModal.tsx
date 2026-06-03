@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef, memo } from 'react'
+import { useState, useCallback, useRef, memo } from 'react'
 import type { NewJob } from '@/app/hooks/useScanner'
 import { useFocusTrap } from '@/app/hooks/useFocusTrap'
 
@@ -21,14 +21,7 @@ export const ScanInterruptModal = memo(function ScanInterruptModal({
   )
   useFocusTrap(dialogRef, true)
 
-  // Keyboard dismiss
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onDismiss()
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onDismiss])
+  // Keyboard dismiss is handled via onKeyDown on the backdrop (receives bubbled events from inside the dialog)
 
   const toggleRow = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -51,17 +44,24 @@ export const ScanInterruptModal = memo(function ScanInterruptModal({
   }, [selectedIds, onEvaluateSelected])
 
   return (
-    // Backdrop
+    // Backdrop — click-to-dismiss; Escape bubbles up from the focus-trapped inner dialog
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- purely visual overlay; inner dialog (role="dialog") is the interactive element
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="scan-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onDismiss()
       }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onDismiss()
+      }}
     >
-      <div ref={dialogRef} className="w-full max-w-2xl bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="scan-modal-title"
+        className="w-full max-w-2xl bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
           <div>

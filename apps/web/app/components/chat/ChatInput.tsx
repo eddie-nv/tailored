@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 
 type Props = {
   onSubmit: (text: string) => void
@@ -10,6 +10,7 @@ type Props = {
 export function ChatInput({ onSubmit, isLoading }: Props) {
   const [value, setValue] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const hintId = useId()
 
   function handleSubmit() {
     const text = value.trim()
@@ -43,6 +44,7 @@ export function ChatInput({ onSubmit, isLoading }: Props) {
           rows={1}
           disabled={isLoading}
           aria-label="Message input"
+          aria-describedby={hintId}
           className={[
             'flex-1 resize-none bg-transparent text-sm leading-5 text-zinc-900 placeholder:text-zinc-400',
             'focus:outline-none disabled:opacity-50',
@@ -83,7 +85,7 @@ export function ChatInput({ onSubmit, isLoading }: Props) {
           )}
         </button>
       </div>
-      <p className="text-[10px] text-zinc-400 text-center mt-1.5">
+      <p id={hintId} className="text-[10px] text-zinc-400 text-center mt-1.5">
         Enter to send · Shift+Enter for newline
       </p>
     </div>

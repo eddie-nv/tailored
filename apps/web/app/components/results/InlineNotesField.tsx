@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useState, useCallback, useRef, useEffect } from 'react'
+import { memo, useState, useCallback, useRef, useEffect, useId } from 'react'
 
 interface InlineNotesFieldProps {
   jobId: string
@@ -17,6 +17,8 @@ export const InlineNotesField = memo(function InlineNotesField({
   const [localNotes, setLocalNotes] = useState(notes ?? '')
   const [isSaving, setIsSaving] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const hintId = useId()
+  const modeRef = useRef<HTMLDivElement>(null)
 
   // Sync prop to local state when parent updates (e.g. optimistic rollback)
   useEffect(() => {
@@ -27,6 +29,7 @@ export const InlineNotesField = memo(function InlineNotesField({
 
   const enterEdit = useCallback(() => {
     setIsEditing(true)
+    if (modeRef.current) modeRef.current.textContent = 'Notes editing mode'
   }, [])
 
   const save = useCallback(async () => {
@@ -68,17 +71,23 @@ export const InlineNotesField = memo(function InlineNotesField({
 
   return (
     <div className="flex items-start gap-2 flex-1 min-w-0">
-      <label className="text-xs text-zinc-500 font-medium shrink-0 mt-1">Notes</label>
+      <div ref={modeRef} role="status" aria-live="polite" className="sr-only" />
+      <span className="text-xs text-zinc-500 font-medium shrink-0 mt-1" aria-hidden="true">Notes</span>
       {isEditing ? (
-        <textarea
-          ref={textareaRef}
-          value={localNotes}
-          onChange={(e) => setLocalNotes(e.target.value)}
-          onBlur={() => void save()}
-          onKeyDown={handleKeyDown}
-          rows={2}
-          placeholder="Add notes…"
-          aria-label="Job notes"
+        <>
+          <span id={hintId} className="sr-only">
+            Press Ctrl+Enter to save, Escape to cancel.
+          </span>
+          <textarea
+            ref={textareaRef}
+            value={localNotes}
+            onChange={(e) => setLocalNotes(e.target.value)}
+            onBlur={() => void save()}
+            onKeyDown={handleKeyDown}
+            rows={2}
+            placeholder="Add notes…"
+            aria-label="Job notes"
+            aria-describedby={hintId}
           className="
             flex-1 min-w-0 resize-none rounded border border-zinc-600
             bg-zinc-800/80 px-2.5 py-1.5 text-xs text-zinc-200
@@ -87,6 +96,7 @@ export const InlineNotesField = memo(function InlineNotesField({
             transition-colors
           "
         />
+        </>
       ) : (
         <button
           type="button"
