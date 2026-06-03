@@ -1,6 +1,33 @@
 // Portal group definitions — mirrors apps/web/app/components/config/portals.ts
 // Kept here to avoid a cross-package dependency on the web app.
 
+export type KnownPlatform = 'Ashby' | 'Greenhouse' | 'Lever'
+export type DetectedPlatform = KnownPlatform | 'Unknown'
+
+export function detectPlatformFromUrl(url: string): DetectedPlatform {
+  try {
+    const { hostname } = new URL(url)
+    if (hostname === 'jobs.ashbyhq.com') return 'Ashby'
+    if (hostname === 'boards.greenhouse.io' || hostname === 'job-boards.greenhouse.io') return 'Greenhouse'
+    if (hostname === 'jobs.lever.co') return 'Lever'
+    if (hostname.includes('ashby')) return 'Ashby'
+    if (hostname.includes('greenhouse')) return 'Greenhouse'
+    if (hostname.includes('lever')) return 'Lever'
+    return 'Unknown'
+  } catch {
+    return 'Unknown'
+  }
+}
+
+export function extractSlugFromUrl(url: string): string | null {
+  try {
+    const segments = new URL(url).pathname.split('/').filter(Boolean)
+    return segments[0] ?? null
+  } catch {
+    return null
+  }
+}
+
 export interface Portal {
   key: string
   label: string

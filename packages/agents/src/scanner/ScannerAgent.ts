@@ -4,7 +4,7 @@ import { prisma } from '@tailored/db/client'
 import { BaseAgent } from '../shared/base-agent'
 import { loadAppState } from '../shared/state'
 import { randomUUID } from 'crypto'
-import { PORTAL_GROUPS } from './portals'
+import { PORTAL_GROUPS, detectPlatformFromUrl, extractSlugFromUrl } from './portals'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -182,6 +182,45 @@ async function scanPlatformBatch(
   return collected
 }
 
+// ── Custom Portal Batch Builder ───────────────────────────────────────────────
+
+interface CustomPortalRecord {
+  id: string
+  name: string
+  url: string
+  enabled: boolean
+}
+
+function buildCustomBatches(portals: CustomPortalRecord[]): {
+  scannable: PlatformBatch[]
+  skipped: CustomPortalRecord[]
+} {
+  const batchMap = new Map<string, PlatformBatch>()
+  const skipped: CustomPortalRecord[] = []
+
+  for (const portal of portals) {
+    const platform = detectPlatformFromUrl(portal.url)
+    if (platform === 'Unknown') {
+      skipped.push(portal)
+      continue
+    }
+    const slug = extractSlugFromUrl(portal.url)
+    if (!slug) {
+      skipped.push(portal)
+      continue
+    }
+    const key = `custom-${platform}`
+    const existing = batchMap.get(key)
+    if (existing) {
+      existing.portals.push({ key: portal.id, slug })
+    } else {
+      batchMap.set(key, { platformName: platform, portals: [{ key: portal.id, slug }] })
+    }
+  }
+
+  return { scannable: Array.from(batchMap.values()), skipped }
+}
+
 // ── Agent ─────────────────────────────────────────────────────────────────────
 
 export class ScannerAgent extends BaseAgent {
@@ -200,7 +239,17 @@ export class ScannerAgent extends BaseAgent {
       ? safeParseJson<string[]>(discoveryPrefs.keywords, [])
       : []
 
-    const batches = buildPlatformBatches(enabledPortalKeys)
+    const rawCustomPortals = await prisma.customPortal.findMany({ where: { enabled: true } })
+    const { scannable: customBatches, skipped: skippedPortals } = buildCustomBatches(rawCustomPortals)
+
+    if (skippedPortals.length > 0) {
+      yield customEvent('scan-progress-skipped', {
+        portals: skippedPortals.map((p) => ({ name: p.name, url: p.url })),
+        reason: 'No supported ATS detected for these URLs',
+      })
+    }
+
+    const batches = [...buildPlatformBatches(enabledPortalKeys), ...customBatches]
     const total = batches.length
 
     // Emit init progress
