@@ -4,7 +4,7 @@ import { memo, useId } from 'react'
 import type { Job, GeneratedResume } from '@tailored/db'
 import { EvalReportRenderer } from './EvalReportRenderer'
 import { StatusDropdown } from './StatusDropdown'
-import { ResumeMiniPreview } from './ResumeMiniPreview'
+import { ResumeHistory } from './ResumeHistory'
 
 type JobWithResumes = Job & { resumes: GeneratedResume[] }
 
@@ -74,7 +74,7 @@ export const ExpandedJobRow = memo(function ExpandedJobRow({
             {/* Resume history */}
             {job.resumes.length > 0 && (
               <div className="px-5 py-4 border-t border-[var(--border-divider)]">
-                <ResumeMiniPreview resumes={job.resumes} jobId={job.id} />
+                <ResumeHistory resumes={job.resumes} jobId={job.id} />
               </div>
             )}
           </div>
