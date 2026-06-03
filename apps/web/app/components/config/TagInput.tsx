@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useId } from 'react'
 import type { KeyboardEvent } from 'react'
 
 type Props = {
@@ -15,6 +15,7 @@ export function TagInput({ label, value, onChange, placeholder = 'Type and press
   const [input, setInput] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const fieldId = id ?? `tag-${label.toLowerCase().replace(/\s+/g, '-')}`
+  const descId = useId()
 
   const addTag = useCallback(
     (raw: string) => {
@@ -77,6 +78,9 @@ export function TagInput({ label, value, onChange, placeholder = 'Type and press
             </button>
           </span>
         ))}
+        <span id={descId} className="sr-only">
+          Type a tag and press Enter, comma, or space to add it.
+        </span>
         <input
           ref={inputRef}
           id={fieldId}
@@ -88,6 +92,7 @@ export function TagInput({ label, value, onChange, placeholder = 'Type and press
             if (input.trim()) addTag(input)
           }}
           placeholder={value.length === 0 ? placeholder : ''}
+          aria-describedby={descId}
           className="flex-1 min-w-28 text-sm outline-none bg-transparent text-zinc-900 placeholder:text-zinc-300"
         />
       </div>

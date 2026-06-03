@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useState, useRef, useCallback } from 'react'
+import { memo, useState, useRef, useCallback, useEffect } from 'react'
 import { createAgent } from '@/app/lib/createAgent'
 import { EventType } from '@ag-ui/core'
 import type { BaseEvent } from '@ag-ui/core'
@@ -44,6 +44,18 @@ export const ResumeCell = memo(function ResumeCell({
   const [filename, setFilename] = useState<string | null>(resumeFilename)
   const [error, setError] = useState<string | null>(null)
   const abortRef = useRef<(() => void) | null>(null)
+  const liveRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!liveRef.current) return
+    const active = steps.find((s) => s.status === 'active')
+    const done = steps.filter((s) => s.status === 'done')
+    if (active) {
+      liveRef.current.textContent = `Generating resume: ${STEP_LABELS[active.name]}`
+    } else if (done.length === CV_STEPS.length) {
+      liveRef.current.textContent = 'Resume ready for download'
+    }
+  }, [steps])
 
   const handleGenerate = useCallback(() => {
     abortRef.current?.()
@@ -125,6 +137,7 @@ export const ResumeCell = memo(function ResumeCell({
         aria-label="Resume generation progress"
         className="flex flex-col gap-0.5"
       >
+        <div ref={liveRef} className="sr-only" aria-live="polite" />
         {steps.map((step) => (
           <div key={step.name} className="flex items-center gap-1.5">
             <StepDot status={step.status} />

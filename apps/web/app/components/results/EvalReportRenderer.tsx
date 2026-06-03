@@ -1,5 +1,7 @@
 'use client'
 
+'use client'
+
 import { memo } from 'react'
 
 interface EvalReport {
@@ -19,14 +21,14 @@ interface ReportBlockProps {
 const ReportBlock = memo(function ReportBlock({ title, content }: ReportBlockProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      <h4 className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 leading-none">
+      <dt className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 leading-none">
         {title}
-      </h4>
+      </dt>
       <div className="h-px bg-zinc-700/60" />
       {content ? (
-        <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">{content}</p>
+        <dd className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap m-0">{content}</dd>
       ) : (
-        <p className="text-sm text-zinc-600 italic">No data</p>
+        <dd className="text-sm text-zinc-600 italic m-0">No data</dd>
       )}
     </div>
   )
@@ -68,13 +70,13 @@ export const EvalReportRenderer = memo(function EvalReportRenderer({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+    <dl className="grid grid-cols-2 gap-x-8 gap-y-6">
       <ReportBlock title="Role Summary" content={report.roleSummary} />
       <ReportBlock title="CV Match" content={report.cvMatch} />
       <ReportBlock title="Level Strategy" content={report.levelStrategy} />
       <ReportBlock title="Compensation" content={report.compensation} />
       <ReportBlock title="Personalization" content={report.personalization} />
       <ReportBlock title="Interview Prep" content={report.interviewPrep} />
-    </div>
+    </dl>
   )
 })
