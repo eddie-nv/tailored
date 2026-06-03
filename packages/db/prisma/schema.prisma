@@ -63,3 +63,11 @@ model GeneratedResume {
   path      String
   createdAt DateTime @default(now())
 }
+
+model CustomPortal {
+  id        String   @id @default(cuid())
+  name      String
+  url       String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
