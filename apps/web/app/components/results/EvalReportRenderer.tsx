@@ -1,7 +1,5 @@
 'use client'
 
-'use client'
-
 import { memo } from 'react'
 
 interface EvalReport {
@@ -21,14 +19,14 @@ interface ReportBlockProps {
 const ReportBlock = memo(function ReportBlock({ title, content }: ReportBlockProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      <dt className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 leading-none">
+      <dt className="text-[11px] font-semibold uppercase tracking-widest text-[var(--text-muted)] leading-none">
         {title}
       </dt>
-      <div className="h-px bg-zinc-700/60" />
+      <div className="h-px bg-[var(--border-subtle)]" />
       {content ? (
-        <dd className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap m-0">{content}</dd>
+        <dd className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap m-0">{content}</dd>
       ) : (
-        <dd className="text-sm text-zinc-600 italic m-0">No data</dd>
+        <dd className="text-sm text-[var(--text-faint)] italic m-0">No data</dd>
       )}
     </div>
   )
@@ -43,7 +41,7 @@ export const EvalReportRenderer = memo(function EvalReportRenderer({
 }: EvalReportRendererProps) {
   if (!evalReport) {
     return (
-      <div className="flex items-center justify-center py-8 text-zinc-600 text-sm italic">
+      <div className="flex items-center justify-center py-8 text-[var(--text-faint)] text-sm italic">
         No evaluation report yet
       </div>
     )
@@ -54,7 +52,7 @@ export const EvalReportRenderer = memo(function EvalReportRenderer({
     report = JSON.parse(evalReport) as EvalReport
   } catch {
     return (
-      <div className="flex items-center justify-center py-8 text-zinc-600 text-sm italic">
+      <div className="flex items-center justify-center py-8 text-[var(--text-faint)] text-sm italic">
         Unable to parse evaluation report
       </div>
     )
@@ -63,7 +61,7 @@ export const EvalReportRenderer = memo(function EvalReportRenderer({
   const hasAnyContent = Object.values(report).some((v) => v && String(v).trim().length > 0)
   if (!hasAnyContent) {
     return (
-      <div className="flex items-center justify-center py-8 text-zinc-600 text-sm italic">
+      <div className="flex items-center justify-center py-8 text-[var(--text-faint)] text-sm italic">
         No evaluation report yet
       </div>
     )

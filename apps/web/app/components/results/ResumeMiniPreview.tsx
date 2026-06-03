@@ -14,14 +14,13 @@ export const ResumeMiniPreview = memo(function ResumeMiniPreview({
 }: ResumeMiniPreviewProps) {
   if (resumes.length === 0) return null
 
-  // Use the most recently created resume
   const resume = resumes[resumes.length - 1]!
   const previewUrl = `/api/resumes/${resume.id}`
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <h4 className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500">
+        <h4 className="text-[11px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">
           Resume Preview
         </h4>
         <a
@@ -30,9 +29,9 @@ export const ResumeMiniPreview = memo(function ResumeMiniPreview({
           aria-label="Download resume"
           className="
             inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium
-            bg-indigo-500/15 text-indigo-400 border border-indigo-500/30
-            hover:bg-indigo-500/25 hover:text-indigo-300
-            focus:outline-none focus:ring-1 focus:ring-indigo-500/60
+            bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30
+            hover:bg-[var(--accent)]/15 hover:text-[var(--accent-hover)]
+            focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/60
             transition-colors
           "
         >
@@ -52,7 +51,7 @@ export const ResumeMiniPreview = memo(function ResumeMiniPreview({
       <iframe
         src={previewUrl}
         title={`Resume preview for job ${jobId}`}
-        className="w-full rounded border border-zinc-700/60 bg-zinc-900"
+        className="w-full rounded border border-[var(--border-subtle)] bg-white"
         style={{ height: 400 }}
         aria-label="Resume PDF preview"
       />

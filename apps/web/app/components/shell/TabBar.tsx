@@ -51,8 +51,8 @@ export function TabBar() {
             className={[
               'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
               isActive
-                ? 'bg-zinc-900 text-white'
-                : 'text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100',
+                ? 'bg-[var(--foreground)] text-white'
+                : 'text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-sunken)]',
             ].join(' ')}
           >
             <span aria-hidden="true">{tab.icon}</span>

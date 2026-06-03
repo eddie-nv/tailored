@@ -125,10 +125,9 @@ export const ResumeCell = memo(function ResumeCell({
   }, [jobId])
 
   if (!evaluated) {
-    return <span className="text-zinc-700 text-xs select-none">—</span>
+    return <span className="text-[var(--text-subtle)] text-xs select-none">—</span>
   }
 
-  // Running — show step progress inline
   if (status === 'running') {
     return (
       <div
@@ -144,10 +143,10 @@ export const ResumeCell = memo(function ResumeCell({
             <span
               className={`text-xs truncate ${
                 step.status === 'active'
-                  ? 'text-indigo-400'
+                  ? 'text-[var(--accent)]'
                   : step.status === 'done'
-                    ? 'text-zinc-500'
-                    : 'text-zinc-700'
+                    ? 'text-[var(--text-faint)]'
+                    : 'text-[var(--text-subtle)]'
               }`}
             >
               {STEP_LABELS[step.name]}
@@ -158,15 +157,14 @@ export const ResumeCell = memo(function ResumeCell({
     )
   }
 
-  // Error state
   if (status === 'error') {
     return (
       <div className="flex flex-col gap-0.5">
-        <span className="text-xs text-red-400 truncate">{error ?? 'Failed'}</span>
+        <span className="text-xs text-red-600 truncate">{error ?? 'Failed'}</span>
         <button
           type="button"
           onClick={handleGenerate}
-          className="text-xs text-indigo-400 hover:text-indigo-300 underline text-left"
+          className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] underline text-left"
         >
           Retry
         </button>
@@ -174,7 +172,6 @@ export const ResumeCell = memo(function ResumeCell({
     )
   }
 
-  // Has a generated resume (either from props or just generated)
   if (downloadUrl) {
     return (
       <a
@@ -182,7 +179,7 @@ export const ResumeCell = memo(function ResumeCell({
         target="_blank"
         rel="noopener noreferrer"
         aria-label={`Download resume${filename ? `: ${filename}` : ''}`}
-        className="inline-flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+        className="inline-flex items-center gap-1 text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors"
       >
         <DownloadIcon />
         Resume
@@ -190,13 +187,12 @@ export const ResumeCell = memo(function ResumeCell({
     )
   }
 
-  // Evaluated, no resume yet — Generate button
   return (
     <button
       type="button"
       onClick={handleGenerate}
       aria-label="Generate resume"
-      className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+      className="text-xs text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors"
     >
       Generate
     </button>
@@ -222,7 +218,7 @@ function StepDot({ status }: { status: StepStatus }) {
     return (
       <svg
         aria-hidden="true"
-        className="w-3 h-3 animate-spin text-indigo-400 shrink-0"
+        className="w-3 h-3 animate-spin text-[var(--accent)] shrink-0"
         fill="none"
         viewBox="0 0 24 24"
       >
@@ -243,7 +239,7 @@ function StepDot({ status }: { status: StepStatus }) {
     )
   }
   return (
-    <span aria-hidden="true" className="w-3 h-3 rounded-full border border-zinc-700 shrink-0 inline-block" />
+    <span aria-hidden="true" className="w-3 h-3 rounded-full border border-[var(--border-subtle)] shrink-0 inline-block" />
   )
 }
 

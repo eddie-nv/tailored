@@ -27,17 +27,17 @@ export const ScanProgressPanel = memo(function ScanProgressPanel({
       role="status"
       aria-live="polite"
       aria-label="Portal scan progress"
-      className="mx-3 mb-3 rounded border border-zinc-700 bg-zinc-900 text-sm overflow-hidden"
+      className="mx-3 mb-3 rounded border border-[var(--border-subtle)] bg-white text-sm overflow-hidden shadow-sm"
     >
       {/* Header with progress bar */}
       <div className="px-4 pt-3 pb-2">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-zinc-300 font-medium text-xs uppercase tracking-wide">
+          <span className="text-[var(--foreground)] font-medium text-xs uppercase tracking-wide">
             {status === 'done' ? 'Scan complete' : 'Scanning portals…'}
           </span>
           <span className="text-xs font-semibold tabular-nums">
-            <span className="text-indigo-400">{found}</span>
-            <span className="text-zinc-500"> new {found === 1 ? 'job' : 'jobs'} found</span>
+            <span className="text-[var(--accent)]">{found}</span>
+            <span className="text-[var(--text-faint)]"> new {found === 1 ? 'job' : 'jobs'} found</span>
           </span>
         </div>
 
@@ -48,28 +48,28 @@ export const ScanProgressPanel = memo(function ScanProgressPanel({
           aria-valuemin={0}
           aria-valuemax={total || 1}
           aria-label={`${done} of ${total} portals scanned`}
-          className="h-1.5 bg-zinc-800 rounded-full overflow-hidden"
+          className="h-1.5 bg-[var(--surface-disabled)] rounded-full overflow-hidden"
         >
           <div
-            className="h-full bg-indigo-500 rounded-full transition-all duration-300"
+            className="h-full bg-[var(--accent)] rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
 
-        <p className="mt-1.5 text-xs text-zinc-500 tabular-nums">
+        <p className="mt-1.5 text-xs text-[var(--text-faint)] tabular-nums">
           {done} / {total} portals
         </p>
       </div>
 
       {/* Platform list */}
       {platforms.length > 0 && (
-        <div className="border-t border-zinc-800 divide-y divide-zinc-800">
+        <div className="border-t border-[var(--border-divider)] divide-y divide-[var(--border-divider)]">
           {platforms.map((p) => (
             <div key={p.name} className="flex items-center gap-3 px-4 py-2">
               <PlatformIcon done={p.done} />
               <span
                 className={
-                  p.done ? 'text-zinc-400 text-xs' : 'text-zinc-100 text-xs font-medium'
+                  p.done ? 'text-[var(--text-muted)] text-xs' : 'text-[var(--foreground)] text-xs font-medium'
                 }
               >
                 {p.name}
@@ -87,7 +87,7 @@ export const ScanProgressPanel = memo(function ScanProgressPanel({
 
       {/* Error state */}
       {status === 'error' && error && (
-        <div className="px-4 py-3 border-t border-zinc-800 text-red-400 flex items-start gap-2">
+        <div className="px-4 py-3 border-t border-[var(--border-divider)] text-red-600 flex items-start gap-2">
           <span className="shrink-0 text-xs">✕</span>
           <span className="text-xs">{error}</span>
         </div>
@@ -114,7 +114,7 @@ function PlatformIcon({ done }: { done: boolean }) {
   return (
     <span
       aria-hidden="true"
-      className="w-4 h-4 rounded-full border-2 border-indigo-400 shrink-0"
+      className="w-4 h-4 rounded-full border-2 border-[var(--accent)] shrink-0"
     />
   )
 }
@@ -123,7 +123,7 @@ function Spinner({ className = '' }: { className?: string }) {
   return (
     <svg
       aria-hidden="true"
-      className={`w-3.5 h-3.5 animate-spin text-indigo-400 ${className}`}
+      className={`w-3.5 h-3.5 animate-spin text-[var(--accent)] ${className}`}
       fill="none"
       viewBox="0 0 24 24"
     >

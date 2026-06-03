@@ -8,7 +8,11 @@ export function SaveIndicator({ status }: Props) {
   const label =
     status === 'saving' ? 'Saving…' : status === 'saved' ? 'Saved' : 'Error saving'
   const color =
-    status === 'saving' ? 'text-zinc-400' : status === 'saved' ? 'text-emerald-600' : 'text-red-500'
+    status === 'saving'
+      ? 'text-[var(--text-faint)]'
+      : status === 'saved'
+        ? 'text-emerald-600'
+        : 'text-red-500'
 
   return (
     <span role="status" aria-live="polite" className={`text-[11px] font-medium ${color}`}>

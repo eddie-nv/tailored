@@ -105,7 +105,7 @@ export function ResultsTab() {
 
       {/* Batch concurrency indicator */}
       {isBatchRunning && (
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-900/20 border-b border-indigo-500/20 text-xs text-indigo-300">
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--accent)]/8 border-b border-[var(--accent)]/20 text-xs text-[var(--accent)]">
           <svg aria-hidden="true" className="w-3 h-3 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -150,11 +150,11 @@ export function ResultsTab() {
         <div
           role="status"
           aria-label="Loading jobs"
-          className="flex items-center justify-center flex-1 text-zinc-500 text-sm"
+          className="flex items-center justify-center flex-1 text-[var(--text-faint)] text-sm"
         >
           <svg
             aria-hidden="true"
-            className="w-4 h-4 animate-spin mr-2 text-indigo-400"
+            className="w-4 h-4 animate-spin mr-2 text-[var(--accent)]"
             fill="none"
             viewBox="0 0 24 24"
           >
@@ -169,7 +169,7 @@ export function ResultsTab() {
       {!tracker.state.isLoading && tracker.state.error && (
         <div
           role="alert"
-          className="flex items-center justify-center flex-1 text-red-400 text-sm gap-2"
+          className="flex items-center justify-center flex-1 text-red-500 text-sm gap-2"
         >
           <span>✕</span>
           <span>{tracker.state.error}</span>

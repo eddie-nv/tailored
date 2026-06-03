@@ -6,6 +6,7 @@ import { EvalReportRenderer } from './EvalReportRenderer'
 import { StatusDropdown } from './StatusDropdown'
 import { InlineNotesField } from './InlineNotesField'
 import { ResumeMiniPreview } from './ResumeMiniPreview'
+import { scoreStyle } from '@/app/lib/scoreStyles'
 
 type JobWithResumes = Job & { resumes: GeneratedResume[] }
 
@@ -32,11 +33,7 @@ export const ExpandedJobRow = memo(function ExpandedJobRow({
 
   return (
     <tr role="presentation">
-      <td colSpan={colSpan} className="p-0 border-b border-zinc-800/60">
-        {/*
-          We always render the panel so the transition plays on both open and close.
-          The content is hidden from screen readers when collapsed via aria-hidden on the inner div.
-        */}
+      <td colSpan={colSpan} className="p-0 border-b border-[var(--border-divider)]">
         <div
           style={{
             maxHeight: isExpanded ? '900px' : '0px',
@@ -51,19 +48,18 @@ export const ExpandedJobRow = memo(function ExpandedJobRow({
             inert={!isExpanded}
             className="
               mx-3 mb-3 rounded-lg
-              border border-zinc-700/50
-              bg-zinc-900/80 shadow-lg shadow-black/20
-              backdrop-blur-sm
+              border border-[var(--border-subtle)]
+              bg-white shadow-md
             "
           >
             {/* Header bar */}
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-700/40">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border-divider)]">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-zinc-200">{job.company}</span>
-                <span className="text-zinc-600">—</span>
-                <span className="text-sm text-zinc-400">{job.role}</span>
+                <span className="text-sm font-semibold text-[var(--foreground)]">{job.company}</span>
+                <span className="text-[var(--text-faint)]">—</span>
+                <span className="text-sm text-[var(--text-muted)]">{job.role}</span>
                 {job.score && (
-                  <span className="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
+                  <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold ${scoreStyle(job.score)}`}>
                     {job.score}
                   </span>
                 )}
@@ -73,8 +69,8 @@ export const ExpandedJobRow = memo(function ExpandedJobRow({
                 onClick={onCollapse}
                 aria-label="Collapse job details"
                 className="
-                  p-1 rounded text-zinc-500 hover:text-zinc-300
-                  focus:outline-none focus:ring-1 focus:ring-indigo-500/60
+                  p-1 rounded text-[var(--text-faint)] hover:text-[var(--foreground)]
+                  focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/60
                   transition-colors
                 "
               >
@@ -90,7 +86,7 @@ export const ExpandedJobRow = memo(function ExpandedJobRow({
             </div>
 
             {/* Footer: status + notes + archive */}
-            <div className="flex items-start gap-4 px-5 py-3 border-t border-zinc-700/40 bg-zinc-900/40 rounded-b-lg">
+            <div className="flex items-start gap-4 px-5 py-3 border-t border-[var(--border-divider)] bg-[var(--surface)] rounded-b-lg">
               <StatusDropdown
                 jobId={job.id}
                 status={job.status}
@@ -109,9 +105,9 @@ export const ExpandedJobRow = memo(function ExpandedJobRow({
                   onClick={() => onArchive(job.id)}
                   className="
                     shrink-0 rounded px-2.5 py-1 text-xs font-medium
-                    text-zinc-500 border border-zinc-700 bg-zinc-800/50
-                    hover:text-zinc-300 hover:border-zinc-600 hover:bg-zinc-800
-                    focus:outline-none focus:ring-1 focus:ring-indigo-500/60
+                    text-[var(--text-muted)] border border-[var(--border)] bg-[var(--surface-sunken)]
+                    hover:text-[var(--foreground)] hover:border-[var(--text-faint)] hover:bg-[var(--border-divider)]
+                    focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/60
                     transition-colors
                   "
                 >
@@ -120,9 +116,9 @@ export const ExpandedJobRow = memo(function ExpandedJobRow({
               )}
             </div>
 
-            {/* Resume preview (additive — only when resumes exist) */}
+            {/* Resume preview */}
             {job.resumes.length > 0 && (
-              <div className="px-5 py-4 border-t border-zinc-700/40">
+              <div className="px-5 py-4 border-t border-[var(--border-divider)]">
                 <ResumeMiniPreview resumes={job.resumes} jobId={job.id} />
               </div>
             )}

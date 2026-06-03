@@ -21,7 +21,7 @@ export function AppShell() {
     <div className="flex h-full overflow-hidden bg-white">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-zinc-900 focus:rounded-md focus:shadow-lg focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-[var(--foreground)] focus:rounded-md focus:shadow-lg focus:ring-2 focus:ring-[var(--accent)] text-sm font-medium"
       >
         Skip to main content
       </a>
@@ -32,8 +32,8 @@ export function AppShell() {
         aria-label="Chat"
       >
         <div className="flex items-center gap-2 px-4 h-12 border-b border-[var(--border)] shrink-0">
-          <h1 className="text-sm font-semibold tracking-tight text-zinc-900 m-0">Tailored</h1>
-          <span className="text-xs text-zinc-400 font-mono">AI</span>
+          <h1 className="text-sm font-semibold tracking-tight text-[var(--foreground)] m-0">Tailored</h1>
+          <span className="text-xs text-[var(--text-muted)] font-mono">AI</span>
         </div>
         <ErrorBoundary label="Chat panel error">
           <ChatPanel />

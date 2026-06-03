@@ -20,7 +20,6 @@ export const InlineNotesField = memo(function InlineNotesField({
   const hintId = useId()
   const modeRef = useRef<HTMLDivElement>(null)
 
-  // Sync prop to local state when parent updates (e.g. optimistic rollback)
   useEffect(() => {
     if (!isEditing) {
       setLocalNotes(notes ?? '')
@@ -60,7 +59,6 @@ export const InlineNotesField = memo(function InlineNotesField({
     [notes, save],
   )
 
-  // Focus textarea when entering edit mode
   useEffect(() => {
     if (isEditing && textareaRef.current) {
       textareaRef.current.focus()
@@ -72,7 +70,7 @@ export const InlineNotesField = memo(function InlineNotesField({
   return (
     <div className="flex items-start gap-2 flex-1 min-w-0">
       <div ref={modeRef} role="status" aria-live="polite" className="sr-only" />
-      <span className="text-xs text-zinc-500 font-medium shrink-0 mt-1" aria-hidden="true">Notes</span>
+      <span className="text-xs text-[var(--text-faint)] font-medium shrink-0 mt-1" aria-hidden="true">Notes</span>
       {isEditing ? (
         <>
           <span id={hintId} className="sr-only">
@@ -88,14 +86,14 @@ export const InlineNotesField = memo(function InlineNotesField({
             placeholder="Add notes…"
             aria-label="Job notes"
             aria-describedby={hintId}
-          className="
-            flex-1 min-w-0 resize-none rounded border border-zinc-600
-            bg-zinc-800/80 px-2.5 py-1.5 text-xs text-zinc-200
-            placeholder:text-zinc-600 leading-relaxed
-            focus:outline-none focus:ring-1 focus:ring-indigo-500/60 focus:border-indigo-500/60
-            transition-colors
-          "
-        />
+            className="
+              flex-1 min-w-0 resize-none rounded border border-[var(--text-faint)]
+              bg-white px-2.5 py-1.5 text-xs text-[var(--foreground)]
+              placeholder:text-[var(--text-faint)] leading-relaxed
+              focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/60 focus:border-[var(--accent)]/60
+              transition-colors
+            "
+          />
         </>
       ) : (
         <button
@@ -105,18 +103,18 @@ export const InlineNotesField = memo(function InlineNotesField({
           aria-label="Edit notes"
           className="
             flex-1 min-w-0 text-left rounded px-2.5 py-1.5 text-xs leading-relaxed
-            text-zinc-300 hover:bg-zinc-800/60 focus:outline-none
-            focus:ring-1 focus:ring-indigo-500/60
+            text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] focus:outline-none
+            focus:ring-1 focus:ring-[var(--accent)]/60
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-colors cursor-text
           "
         >
           {isSaving ? (
-            <span className="text-zinc-500 italic">Saving…</span>
+            <span className="text-[var(--text-faint)] italic">Saving…</span>
           ) : localNotes ? (
-            <span className="text-zinc-300 whitespace-pre-wrap">{localNotes}</span>
+            <span className="text-[var(--text-secondary)] whitespace-pre-wrap">{localNotes}</span>
           ) : (
-            <span className="text-zinc-600 italic">Click to add notes…</span>
+            <span className="text-[var(--text-faint)] italic">Click to add notes…</span>
           )}
         </button>
       )}

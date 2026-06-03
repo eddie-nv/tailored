@@ -32,7 +32,9 @@ export function ChatInput({ onSubmit, isLoading }: Props) {
       <div
         className={[
           'flex items-end gap-2 rounded-xl border bg-white px-3 py-2 transition-colors',
-          isLoading ? 'border-zinc-200' : 'border-zinc-300 focus-within:border-zinc-500',
+          isLoading
+            ? 'border-[var(--border)]'
+            : 'border-[var(--border)] focus-within:border-[var(--text-muted)]',
         ].join(' ')}
       >
         <textarea
@@ -46,7 +48,7 @@ export function ChatInput({ onSubmit, isLoading }: Props) {
           aria-label="Message input"
           aria-describedby={hintId}
           className={[
-            'flex-1 resize-none bg-transparent text-sm leading-5 text-zinc-900 placeholder:text-zinc-400',
+            'flex-1 resize-none bg-transparent text-sm leading-5 text-[var(--foreground)] placeholder:text-[var(--text-faint)]',
             'focus:outline-none disabled:opacity-50',
             'max-h-32 overflow-y-auto',
           ].join(' ')}
@@ -60,12 +62,12 @@ export function ChatInput({ onSubmit, isLoading }: Props) {
           className={[
             'shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-colors',
             value.trim() && !isLoading
-              ? 'bg-zinc-900 text-white hover:bg-zinc-700'
-              : 'bg-zinc-200 text-zinc-400 cursor-not-allowed',
+              ? 'bg-[var(--foreground)] text-white hover:bg-[var(--text-secondary)]'
+              : 'bg-[var(--surface-disabled)] text-[var(--text-faint)] cursor-not-allowed',
           ].join(' ')}
         >
           {isLoading ? (
-            <span className="w-3 h-3 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+            <span className="w-3 h-3 border-2 border-[var(--text-faint)] border-t-transparent rounded-full animate-spin" aria-hidden="true" />
           ) : (
             <svg
               aria-hidden="true"
@@ -85,7 +87,7 @@ export function ChatInput({ onSubmit, isLoading }: Props) {
           )}
         </button>
       </div>
-      <p id={hintId} className="text-[10px] text-zinc-400 text-center mt-1.5">
+      <p id={hintId} className="text-[10px] text-[var(--text-faint)] text-center mt-1.5">
         Enter to send · Shift+Enter for newline
       </p>
     </div>
