@@ -23,6 +23,25 @@ export function SectionOrderList({ sections, onChange }: Props) {
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [overIndex, setOverIndex] = useState<number | null>(null)
   const dragItem = useRef<number | null>(null)
+  const liveRef = useRef<HTMLDivElement>(null)
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent, index: number) => {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+      e.preventDefault()
+      const next = e.key === 'ArrowUp' ? index - 1 : index + 1
+      if (next < 0 || next >= sections.length) return
+      const reordered = [...sections]
+      const [item] = reordered.splice(index, 1)
+      reordered.splice(next, 0, item)
+      onChange(reordered)
+      if (liveRef.current) {
+        const label = SECTION_LABELS[item] ?? item
+        liveRef.current.textContent = `${label} moved to position ${next + 1}`
+      }
+    },
+    [sections, onChange],
+  )
 
   const handleDragStart = useCallback((_e: DragEvent, index: number) => {
     dragItem.current = index
@@ -62,16 +81,20 @@ export function SectionOrderList({ sections, onChange }: Props) {
   }, [])
 
   return (
+    <>
     <div className="space-y-1.5" role="list" aria-label="Resume section order">
       {sections.map((section, index) => (
         <div
           key={section}
           role="listitem"
+          tabIndex={0}
+          aria-label={`${SECTION_LABELS[section] ?? section}, position ${index + 1} of ${sections.length}`}
           draggable
           onDragStart={(e) => handleDragStart(e, index)}
           onDragOver={(e) => handleDragOver(e, index)}
           onDrop={() => handleDrop(index)}
           onDragEnd={handleDragEnd}
+          onKeyDown={(e) => handleKeyDown(e, index)}
           className={`flex items-center gap-3 px-3 py-2 rounded-[var(--radius-sm)] border text-sm cursor-grab select-none transition-all ${
             dragIndex === index
               ? 'opacity-40 border-[var(--border)]'
@@ -100,5 +123,7 @@ export function SectionOrderList({ sections, onChange }: Props) {
         </div>
       ))}
     </div>
+    <div ref={liveRef} role="status" aria-live="polite" className="sr-only" />
+    </>
   )
 }

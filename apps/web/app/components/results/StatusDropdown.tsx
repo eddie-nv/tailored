@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useState, useCallback } from 'react'
+import { memo, useState, useCallback, useId } from 'react'
 
 const STATUS_OPTIONS = [
   { value: 'new', label: 'New' },
@@ -31,6 +31,7 @@ export const StatusDropdown = memo(function StatusDropdown({
   status,
   onUpdate,
 }: StatusDropdownProps) {
+  const selectId = useId()
   const [isSaving, setIsSaving] = useState(false)
   const [localStatus, setLocalStatus] = useState(status)
 
@@ -55,13 +56,13 @@ export const StatusDropdown = memo(function StatusDropdown({
 
   return (
     <div className="flex items-center gap-2">
-      <label className="text-xs text-zinc-500 font-medium shrink-0">Status</label>
+      <label htmlFor={selectId} className="text-xs text-zinc-500 font-medium shrink-0">Status</label>
       <div className="relative">
         <select
+          id={selectId}
           value={localStatus}
           onChange={handleChange}
           disabled={isSaving}
-          aria-label="Job status"
           className={`
             appearance-none rounded border px-2.5 py-1 pr-6 text-xs font-medium
             focus:outline-none focus:ring-1 focus:ring-indigo-500/60

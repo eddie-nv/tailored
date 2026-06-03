@@ -71,3 +71,9 @@ body {
   vertical-align: baseline;
   color: var(--accent);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .streaming-cursor::after {
+    animation: none;
+  }
+}

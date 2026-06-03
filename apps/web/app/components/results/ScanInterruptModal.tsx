@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback, memo } from 'react'
+import { useState, useEffect, useCallback, useRef, memo } from 'react'
 import type { NewJob } from '@/app/hooks/useScanner'
+import { useFocusTrap } from '@/app/hooks/useFocusTrap'
 
 interface ScanInterruptModalProps {
   jobs: NewJob[]
@@ -14,9 +15,11 @@ export const ScanInterruptModal = memo(function ScanInterruptModal({
   onEvaluateSelected,
   onDismiss,
 }: ScanInterruptModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
     () => new Set(jobs.map((j) => j.id)),
   )
+  useFocusTrap(dialogRef, true)
 
   // Keyboard dismiss
   useEffect(() => {
@@ -58,7 +61,7 @@ export const ScanInterruptModal = memo(function ScanInterruptModal({
         if (e.target === e.currentTarget) onDismiss()
       }}
     >
-      <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+      <div ref={dialogRef} className="w-full max-w-2xl bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
           <div>
@@ -94,7 +97,7 @@ export const ScanInterruptModal = memo(function ScanInterruptModal({
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-zinc-900 border-b border-zinc-800">
                 <tr>
-                  <th className="w-10 px-4 py-2.5 text-left">
+                  <th scope="col" className="w-10 px-4 py-2.5 text-left">
                     <input
                       type="checkbox"
                       checked={allSelected}
@@ -106,17 +109,16 @@ export const ScanInterruptModal = memo(function ScanInterruptModal({
                       className="rounded border-zinc-600 bg-zinc-800 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-zinc-900"
                     />
                   </th>
-                  <th className="px-3 py-2.5 text-left text-zinc-400 font-medium">Company</th>
-                  <th className="px-3 py-2.5 text-left text-zinc-400 font-medium">Role</th>
-                  <th className="px-3 py-2.5 text-left text-zinc-400 font-medium">URL</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-zinc-400 font-medium">Company</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-zinc-400 font-medium">Role</th>
+                  <th scope="col" className="px-3 py-2.5 text-left text-zinc-400 font-medium">URL</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
                 {jobs.map((job) => (
                   <tr
                     key={job.id}
-                    className="hover:bg-zinc-800/50 cursor-pointer transition-colors"
-                    onClick={() => toggleRow(job.id)}
+                    className="hover:bg-zinc-800/50 transition-colors"
                   >
                     <td className="px-4 py-2.5">
                       <input

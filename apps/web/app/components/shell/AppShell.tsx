@@ -19,13 +19,20 @@ export function AppShell() {
 
   return (
     <div className="flex h-full overflow-hidden bg-white">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-zinc-900 focus:rounded-md focus:shadow-lg focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
+      >
+        Skip to main content
+      </a>
+
       {/* Chat panel — fixed left column */}
       <aside
         className="w-80 shrink-0 flex flex-col border-r border-[var(--border)] bg-[var(--surface)]"
         aria-label="Chat"
       >
         <div className="flex items-center gap-2 px-4 h-12 border-b border-[var(--border)] shrink-0">
-          <span className="text-sm font-semibold tracking-tight text-zinc-900">Tailored</span>
+          <h1 className="text-sm font-semibold tracking-tight text-zinc-900 m-0">Tailored</h1>
           <span className="text-xs text-zinc-400 font-mono">AI</span>
         </div>
         <ErrorBoundary label="Chat panel error">
@@ -41,14 +48,17 @@ export function AppShell() {
         </header>
 
         {/* Tab content */}
-        <main
-          role="tabpanel"
-          aria-label={activeTab === 'config' ? 'Config' : 'Results'}
-          className="flex-1 overflow-auto"
-        >
-          <ErrorBoundary label={activeTab === 'config' ? 'Config tab error' : 'Results tab error'}>
-            <TabContent tab={activeTab} />
-          </ErrorBoundary>
+        <main id="main-content" className="flex-1 overflow-auto">
+          <div
+            id="main-tab-panel"
+            role="tabpanel"
+            aria-labelledby={`${activeTab}-tab`}
+            tabIndex={-1}
+          >
+            <ErrorBoundary label={activeTab === 'config' ? 'Config tab error' : 'Results tab error'}>
+              <TabContent tab={activeTab} />
+            </ErrorBoundary>
+          </div>
         </main>
       </div>
     </div>

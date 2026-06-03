@@ -143,7 +143,7 @@ export function JobTable({
 
     return (
       <div ref={scrollRef} className="overflow-auto flex-1">
-        <table role="grid" aria-label="Job tracker" className="w-full text-sm border-collapse">
+        <table aria-label="Job tracker" className="w-full text-sm border-collapse">
           {tableHead}
           <tbody>
             {paddingTop > 0 && (
@@ -326,7 +326,7 @@ const JobRowGroup = memo(function JobRowGroup({
           <span
             className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${
               job.source === 'scan'
-                ? 'bg-zinc-700 text-zinc-300'
+                ? 'bg-indigo-500/15 text-indigo-400'
                 : 'bg-zinc-800 text-zinc-400'
             }`}
           >
@@ -393,6 +393,39 @@ function ActionMenu({
   onDelete: (id: string) => void
 }) {
   const [open, setOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open || !menuRef.current) return
+    const items = menuRef.current.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')
+    items[0]?.focus()
+  }, [open])
+
+  const close = useCallback(() => {
+    setOpen(false)
+    triggerRef.current?.focus()
+  }, [])
+
+  const handleMenuKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!menuRef.current) return
+      const items = Array.from(menuRef.current.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'))
+      const current = document.activeElement as HTMLElement
+      const idx = items.indexOf(current as HTMLButtonElement)
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        items[(idx + 1) % items.length]?.focus()
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        items[(idx - 1 + items.length) % items.length]?.focus()
+      } else if (e.key === 'Escape' || e.key === 'Tab') {
+        e.preventDefault()
+        close()
+      }
+    },
+    [close],
+  )
 
   const handleArchive = useCallback(() => {
     setOpen(false)
@@ -407,6 +440,7 @@ function ActionMenu({
   return (
     <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
         aria-label={`Actions for ${job.company}`}
         aria-expanded={open}
@@ -426,16 +460,19 @@ function ActionMenu({
           <div
             role="presentation"
             className="fixed inset-0 z-20"
-            onClick={() => setOpen(false)}
+            onClick={close}
           />
           <div
+            ref={menuRef}
             role="menu"
             aria-label={`Actions for ${job.company}`}
+            onKeyDown={handleMenuKeyDown}
             className="absolute right-0 z-30 mt-1 w-36 rounded border border-zinc-700 bg-zinc-900 shadow-xl py-1 text-xs"
           >
             {job.status !== 'archived' && (
               <button
                 role="menuitem"
+                tabIndex={-1}
                 type="button"
                 onClick={handleArchive}
                 className="w-full text-left px-3 py-1.5 text-zinc-300 hover:bg-zinc-800 transition-colors"
@@ -445,6 +482,7 @@ function ActionMenu({
             )}
             <button
               role="menuitem"
+              tabIndex={-1}
               type="button"
               onClick={handleDelete}
               className="w-full text-left px-3 py-1.5 text-red-400 hover:bg-zinc-800 transition-colors"

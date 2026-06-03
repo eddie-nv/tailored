@@ -12,8 +12,6 @@ export function ChatMessage({ message }: Props) {
       <div className="flex justify-end">
         <div
           className="max-w-[85%] rounded-2xl rounded-tr-sm px-3 py-2 bg-zinc-900 text-white text-sm leading-relaxed break-words"
-          role="article"
-          aria-label="Your message"
         >
           {message.content}
         </div>
@@ -22,7 +20,7 @@ export function ChatMessage({ message }: Props) {
   }
 
   return (
-    <div className="flex gap-2 items-start" role="article" aria-label="Assistant message">
+    <div className="flex gap-2 items-start">
       {/* Avatar */}
       <div
         className="w-6 h-6 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center shrink-0 mt-0.5"
