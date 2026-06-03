@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { CollapsibleSection } from './CollapsibleSection'
 import { TagInput } from './TagInput'
-import { PortalChecklist } from './PortalChecklist'
+import { PortalManager } from './PortalManager'
 import { useDebouncedCallback } from '../../hooks/useDebouncedCallback'
 import { safeParseJson } from '../../lib/json'
 import type { SaveStatus } from './SaveIndicator'
@@ -90,15 +90,10 @@ export function DiscoverySection() {
   return (
     <CollapsibleSection title="Discovery" saveStatus={saveStatus}>
       <div className="space-y-6">
-        <fieldset>
-          <legend className="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 mb-3">
-            Portals
-          </legend>
-          <PortalChecklist
-            value={form.portals}
-            onChange={(v) => handleChange('portals', v)}
-          />
-        </fieldset>
+        <PortalManager
+          presetValue={form.portals}
+          onPresetChange={(v) => handleChange('portals', v)}
+        />
 
         <TagInput
           label="Keywords"

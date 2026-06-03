@@ -8,7 +8,7 @@ type Props = {
   onChange: (portals: string[]) => void
 }
 
-export function PortalChecklist({ value, onChange }: Props) {
+export function PresetPortals({ value, onChange }: Props) {
   const selectedSet = new Set(value)
 
   const toggle = useCallback(
