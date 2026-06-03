@@ -30,7 +30,6 @@ interface JobTableProps {
   onArchive: (id: string) => void
   onDelete: (id: string) => void
   onUpdateStatus: (jobId: string, status: string) => Promise<void>
-  onUpdateNotes: (jobId: string, notes: string) => Promise<void>
 }
 
 export function JobTable({
@@ -42,17 +41,12 @@ export function JobTable({
   onArchive,
   onDelete,
   onUpdateStatus,
-  onUpdateNotes,
 }: JobTableProps) {
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const handleToggleExpand = useCallback((id: string) => {
     setExpandedJobId((prev) => (prev === id ? null : id))
-  }, [])
-
-  const handleCollapse = useCallback(() => {
-    setExpandedJobId(null)
   }, [])
 
   useEffect(() => {
@@ -122,12 +116,10 @@ export function JobTable({
 
   const sharedCallbacks = {
     onToggleExpand: handleToggleExpand,
-    onCollapse: handleCollapse,
     onToggleSelect,
     onArchive,
     onDelete,
     onUpdateStatus,
-    onUpdateNotes,
   }
 
   if (shouldVirtualize) {
@@ -199,12 +191,10 @@ interface JobRowGroupProps {
   activeStep: string | null
   isExpanded: boolean
   onToggleExpand: (id: string) => void
-  onCollapse: () => void
   onToggleSelect: (id: string) => void
   onArchive: (id: string) => void
   onDelete: (id: string) => void
   onUpdateStatus: (jobId: string, status: string) => Promise<void>
-  onUpdateNotes: (jobId: string, notes: string) => Promise<void>
 }
 
 const JobRowGroup = memo(function JobRowGroup({
@@ -213,12 +203,10 @@ const JobRowGroup = memo(function JobRowGroup({
   activeStep,
   isExpanded,
   onToggleExpand,
-  onCollapse,
   onToggleSelect,
   onArchive,
   onDelete,
   onUpdateStatus,
-  onUpdateNotes,
 }: JobRowGroupProps) {
   const panelId = useId()
   const rowRef = useRef<HTMLTableRowElement>(null)
@@ -371,9 +359,7 @@ const JobRowGroup = memo(function JobRowGroup({
         job={job}
         isExpanded={isExpanded}
         colSpan={COL_SPAN}
-        onCollapse={onCollapse}
         onUpdateStatus={onUpdateStatus}
-        onUpdateNotes={onUpdateNotes}
         onArchive={onArchive}
       />
     </>

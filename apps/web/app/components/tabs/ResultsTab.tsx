@@ -194,7 +194,6 @@ export function ResultsTab() {
           onArchive={tracker.archiveJob}
           onDelete={tracker.deleteJob}
           onUpdateStatus={tracker.updateStatus}
-          onUpdateNotes={tracker.updateNotes}
         />
       )}
 
