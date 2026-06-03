@@ -1,15 +1,7 @@
 'use client'
 
 import { memo } from 'react'
-
-const SCORE_STYLES: Record<string, string> = {
-  A: 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30',
-  'B+': 'bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/30',
-  B: 'bg-blue-500/10 text-blue-300 ring-1 ring-blue-500/20',
-  C: 'bg-yellow-500/10 text-yellow-400 ring-1 ring-yellow-500/20',
-  D: 'bg-orange-500/10 text-orange-400 ring-1 ring-orange-500/20',
-  F: 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20',
-}
+import { scoreStyle } from '@/app/lib/scoreStyles'
 
 interface EvalStatusCellProps {
   score: string | null
@@ -25,7 +17,7 @@ export const EvalStatusCell = memo(function EvalStatusCell({
   // Active evaluation in progress
   if (activeStep) {
     return (
-      <span className="flex items-center gap-1.5 text-xs text-indigo-400">
+      <span className="flex items-center gap-1.5 text-xs text-[var(--accent)]">
         <svg
           aria-hidden="true"
           className="w-3 h-3 animate-spin shrink-0"
@@ -53,11 +45,10 @@ export const EvalStatusCell = memo(function EvalStatusCell({
 
   // Evaluated — show grade badge
   if (score) {
-    const style = SCORE_STYLES[score] ?? SCORE_STYLES['C']!
     return (
       <span
         aria-label={`Match score: ${score} (A is best, F is worst)`}
-        className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${style}`}
+        className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${scoreStyle(score)}`}
       >
         {score}
       </span>
@@ -66,10 +57,10 @@ export const EvalStatusCell = memo(function EvalStatusCell({
 
   // New / not evaluated
   if (status === 'new') {
-    return <span className="text-xs text-zinc-600">New</span>
+    return <span className="text-xs text-[var(--text-subtle)]">New</span>
   }
 
-  return <span className="text-xs text-zinc-500 capitalize">{status}</span>
+  return <span className="text-xs text-[var(--text-faint)] capitalize">{status}</span>
 })
 
 const STEP_LABELS: Record<string, string> = {

@@ -105,7 +105,7 @@ export function SectionOrderList({ sections, onChange }: Props) {
           }`}
         >
           <svg
-            className="w-3.5 h-3.5 text-zinc-300 shrink-0"
+            className="w-3.5 h-3.5 text-[var(--text-subtle)] shrink-0"
             fill="currentColor"
             viewBox="0 0 16 16"
             aria-hidden="true"
@@ -118,7 +118,7 @@ export function SectionOrderList({ sections, onChange }: Props) {
             <circle cx="9" cy="12" r="1.2" />
           </svg>
           <span className="text-zinc-700">{SECTION_LABELS[section] ?? section}</span>
-          <span className="ml-auto text-[10px] text-zinc-300 font-mono tabular-nums">
+          <span className="ml-auto text-[10px] text-[var(--text-subtle)] font-mono tabular-nums">
             {index + 1}
           </span>
         </div>

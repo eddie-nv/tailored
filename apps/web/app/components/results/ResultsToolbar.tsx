@@ -43,12 +43,12 @@ export function ResultsToolbar({
       : `Evaluate ${selectedCount} selected job${selectedCount === 1 ? '' : 's'}`
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 border-b border-zinc-800 flex-shrink-0">
+    <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border-divider)] flex-shrink-0">
       {/* Paste URL */}
       <button
         type="button"
         onClick={onFocusPaste}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors"
       >
         <span aria-hidden="true">+</span>
         Paste URL
@@ -60,7 +60,7 @@ export function ResultsToolbar({
         onClick={onScan}
         disabled={isScanRunning}
         title={isScanRunning ? 'Scan in progress…' : 'Scan configured portals for new jobs'}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-zinc-700 hover:bg-zinc-600 disabled:bg-zinc-800 disabled:text-zinc-500 text-zinc-200 rounded transition-colors disabled:cursor-not-allowed"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-[var(--foreground)] hover:bg-[var(--text-secondary)] disabled:bg-[var(--surface-disabled)] disabled:text-[var(--text-faint)] text-white rounded transition-colors disabled:cursor-not-allowed"
       >
         {isScanRunning ? (
           <>
@@ -81,7 +81,7 @@ export function ResultsToolbar({
         disabled={isEvalDisabled}
         title={evalTitle}
         onClick={isEvalDisabled ? undefined : onEvaluateSelected}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded transition-colors disabled:cursor-not-allowed disabled:text-zinc-500 disabled:bg-zinc-800 enabled:text-white enabled:bg-indigo-700 enabled:hover:bg-indigo-600"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded transition-colors disabled:cursor-not-allowed disabled:text-[var(--text-faint)] disabled:bg-[var(--surface-disabled)] enabled:text-white enabled:bg-[var(--accent-dark)] enabled:hover:bg-[var(--accent)]"
       >
         {isBatchRunning ? <Spinner /> : <span aria-hidden="true">▶</span>}
         {evalLabel}
@@ -92,19 +92,19 @@ export function ResultsToolbar({
         type="button"
         disabled={selectedCount === 0}
         title="Resume generation coming in M9"
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-zinc-500 bg-zinc-800 rounded disabled:cursor-not-allowed"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-[var(--text-faint)] bg-[var(--surface-disabled)] rounded disabled:cursor-not-allowed"
       >
         <span aria-hidden="true">📄</span>
         Generate Resume
       </button>
 
       <div className="ml-auto flex items-center gap-2">
-        <label className="flex items-center gap-1.5 text-xs text-zinc-400 cursor-pointer select-none">
+        <label className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] cursor-pointer select-none">
           <input
             type="checkbox"
             checked={showArchived}
             onChange={(e) => onToggleArchived(e.target.checked)}
-            className="rounded border-zinc-600 bg-zinc-800 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-zinc-900"
+            className="rounded border-[var(--text-faint)] bg-white text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-offset-white"
           />
           Show archived
         </label>

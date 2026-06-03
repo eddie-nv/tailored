@@ -13,11 +13,11 @@ const STATUS_OPTIONS = [
 type JobStatus = (typeof STATUS_OPTIONS)[number]['value']
 
 const STATUS_STYLES: Record<string, string> = {
-  new: 'text-zinc-400 bg-zinc-800 border-zinc-700',
-  reviewed: 'text-blue-300 bg-blue-900/30 border-blue-700/50',
-  applying: 'text-amber-300 bg-amber-900/30 border-amber-700/50',
-  applied: 'text-emerald-300 bg-emerald-900/30 border-emerald-700/50',
-  archived: 'text-zinc-500 bg-zinc-900 border-zinc-700',
+  new: 'text-[var(--text-muted)] bg-[var(--surface-sunken)] border-[var(--border-subtle)]',
+  reviewed: 'text-blue-600 bg-blue-50 border-blue-200',
+  applying: 'text-amber-600 bg-amber-50 border-amber-200',
+  applied: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+  archived: 'text-[var(--text-faint)] bg-[var(--surface)] border-[var(--border-subtle)]',
 }
 
 interface StatusDropdownProps {
@@ -56,7 +56,7 @@ export const StatusDropdown = memo(function StatusDropdown({
 
   return (
     <div className="flex items-center gap-2">
-      <label htmlFor={selectId} className="text-xs text-zinc-500 font-medium shrink-0">Status</label>
+      <label htmlFor={selectId} className="text-xs text-[var(--text-faint)] font-medium shrink-0">Status</label>
       <div className="relative">
         <select
           id={selectId}
@@ -65,14 +65,14 @@ export const StatusDropdown = memo(function StatusDropdown({
           disabled={isSaving}
           className={`
             appearance-none rounded border px-2.5 py-1 pr-6 text-xs font-medium
-            focus:outline-none focus:ring-1 focus:ring-indigo-500/60
+            focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/60
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-colors cursor-pointer
             ${styleClass}
           `}
         >
           {STATUS_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value} className="bg-zinc-900 text-zinc-200">
+            <option key={opt.value} value={opt.value} className="bg-white text-[var(--foreground)]">
               {opt.label}
             </option>
           ))}

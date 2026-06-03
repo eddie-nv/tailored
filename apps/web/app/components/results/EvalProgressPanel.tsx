@@ -23,27 +23,27 @@ export function EvalProgressPanel({ steps, streamedText, status, error }: EvalPr
       role="status"
       aria-live="polite"
       aria-label="Evaluation progress"
-      className="mx-3 mb-3 rounded border border-zinc-700 bg-zinc-900 text-sm overflow-hidden"
+      className="mx-3 mb-3 rounded border border-[var(--border-subtle)] bg-white text-sm overflow-hidden shadow-sm"
     >
       {status === 'creating-job' && (
-        <div className="px-4 py-3 text-zinc-400 flex items-center gap-2">
+        <div className="px-4 py-3 text-[var(--text-muted)] flex items-center gap-2">
           <Spinner />
           <span>Creating job record…</span>
         </div>
       )}
 
       {(status === 'evaluating' || status === 'done') && (
-        <div className="divide-y divide-zinc-800">
+        <div className="divide-y divide-[var(--border-divider)]">
           {steps.map((step) => (
             <div key={step.name} className="flex items-center gap-3 px-4 py-2.5">
               <StepIcon status={step.status} />
               <span
                 className={
                   step.status === 'active'
-                    ? 'text-zinc-100 font-medium'
+                    ? 'text-[var(--foreground)] font-medium'
                     : step.status === 'done'
-                      ? 'text-zinc-400'
-                      : 'text-zinc-600'
+                      ? 'text-[var(--text-muted)]'
+                      : 'text-[var(--text-subtle)]'
                 }
               >
                 {STEP_LABELS[step.name] ?? step.name}
@@ -58,18 +58,18 @@ export function EvalProgressPanel({ steps, streamedText, status, error }: EvalPr
       )}
 
       {streamedText && (
-        <div className="px-4 py-3 border-t border-zinc-800">
-          <p className="text-xs text-zinc-500 mb-1.5 font-medium uppercase tracking-wide">
+        <div className="px-4 py-3 border-t border-[var(--border-divider)]">
+          <p className="text-xs text-[var(--text-faint)] mb-1.5 font-medium uppercase tracking-wide">
             Evaluation Report
           </p>
-          <div className="text-zinc-300 text-xs leading-relaxed max-h-40 overflow-y-auto whitespace-pre-wrap">
+          <div className="text-[var(--text-secondary)] text-xs leading-relaxed max-h-40 overflow-y-auto whitespace-pre-wrap">
             {streamedText}
           </div>
         </div>
       )}
 
       {status === 'error' && error && (
-        <div className="px-4 py-3 text-red-400 flex items-start gap-2">
+        <div className="px-4 py-3 text-red-600 flex items-start gap-2">
           <span className="shrink-0">✕</span>
           <span>{error}</span>
         </div>
@@ -97,14 +97,14 @@ function StepIcon({ status }: { status: EvalStep['status'] }) {
     return (
       <span
         aria-hidden="true"
-        className="w-4 h-4 rounded-full border-2 border-indigo-400 shrink-0"
+        className="w-4 h-4 rounded-full border-2 border-[var(--accent)] shrink-0"
       />
     )
   }
   return (
     <span
       aria-hidden="true"
-      className="w-4 h-4 rounded-full border-2 border-zinc-700 shrink-0"
+      className="w-4 h-4 rounded-full border-2 border-[var(--border-subtle)] shrink-0"
     />
   )
 }
@@ -113,7 +113,7 @@ function Spinner({ className = '' }: { className?: string }) {
   return (
     <svg
       aria-hidden="true"
-      className={`w-3.5 h-3.5 animate-spin text-indigo-400 ${className}`}
+      className={`w-3.5 h-3.5 animate-spin text-[var(--accent)] ${className}`}
       fill="none"
       viewBox="0 0 24 24"
     >

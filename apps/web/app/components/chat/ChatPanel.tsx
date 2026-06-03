@@ -150,12 +150,12 @@ export function ChatPanel() {
       >
         {isEmpty && (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-4">
-            <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-[var(--foreground)] flex items-center justify-center">
               <span className="text-white text-base">T</span>
             </div>
             <div>
-              <p className="text-sm font-semibold text-zinc-800">What are you looking for today?</p>
-              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+              <p className="text-sm font-semibold text-[var(--foreground)]">What are you looking for today?</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
                 Paste a job URL, ask me to scan portals, or update your profile.
               </p>
             </div>

@@ -11,15 +11,14 @@ const VIRTUALIZE_THRESHOLD = 100
 const ESTIMATED_ROW_HEIGHT = 46
 
 const ARCHETYPE_STYLES: Record<string, string> = {
-  LLMOps: 'bg-violet-500/15 text-violet-400',
-  Agentic: 'bg-indigo-500/15 text-indigo-400',
-  PM: 'bg-sky-500/15 text-sky-400',
-  SA: 'bg-teal-500/15 text-teal-400',
-  FDE: 'bg-emerald-500/15 text-emerald-400',
-  Transformation: 'bg-amber-500/15 text-amber-400',
+  LLMOps: 'bg-violet-500/10 text-violet-600',
+  Agentic: 'bg-blue-500/10 text-blue-600',
+  PM: 'bg-sky-500/10 text-sky-600',
+  SA: 'bg-teal-500/10 text-teal-600',
+  FDE: 'bg-emerald-500/10 text-emerald-600',
+  Transformation: 'bg-amber-500/10 text-amber-600',
 }
 
-// Total number of columns in the table (used for colSpan on expanded row)
 const COL_SPAN = 8
 
 interface JobTableProps {
@@ -56,7 +55,6 @@ export function JobTable({
     setExpandedJobId(null)
   }, [])
 
-  // Keyboard: Escape collapses the expanded row
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && expandedJobId !== null) {
@@ -67,7 +65,6 @@ export function JobTable({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [expandedJobId])
 
-  // Virtualize only when above threshold and no row is expanded (expanded row has variable height)
   const shouldVirtualize = jobs.length >= VIRTUALIZE_THRESHOLD && expandedJobId === null
 
   const virtualizer = useVirtualizer({
@@ -82,12 +79,12 @@ export function JobTable({
     return (
       <div
         role="status"
-        className="flex flex-col items-center justify-center flex-1 text-zinc-500 gap-2 select-none px-6 text-center py-16"
+        className="flex flex-col items-center justify-center flex-1 text-[var(--text-faint)] gap-2 select-none px-6 text-center py-16"
       >
         <span className="text-3xl" aria-hidden="true">
           📋
         </span>
-        <p className="text-sm font-medium text-zinc-400">No jobs yet</p>
+        <p className="text-sm font-medium text-[var(--text-muted)]">No jobs yet</p>
         <p className="text-xs">Paste a job URL above or scan portals to get started</p>
       </div>
     )
@@ -98,8 +95,8 @@ export function JobTable({
   const someSelected = visibleIds.some((id) => selectedIds.has(id))
 
   const tableHead = (
-    <thead className="sticky top-0 bg-zinc-950 z-10">
-      <tr className="border-b border-zinc-800">
+    <thead className="sticky top-0 bg-white z-10 shadow-[0_1px_0_0_var(--border-subtle)]">
+      <tr className="border-b border-[var(--border-divider)]">
         <th scope="col" className="w-10 px-3 py-2.5">
           <input
             type="checkbox"
@@ -109,15 +106,15 @@ export function JobTable({
               if (el) el.indeterminate = someSelected && !allSelected
             }}
             onChange={() => onToggleSelectAll(visibleIds)}
-            className="rounded border-zinc-600 bg-zinc-800 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-zinc-900"
+            className="rounded border-[var(--text-faint)] bg-white text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-offset-white"
           />
         </th>
-        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Company</th>
-        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Role</th>
-        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Source</th>
-        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Archetype</th>
-        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Eval</th>
-        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Resume</th>
+        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Company</th>
+        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Role</th>
+        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Source</th>
+        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Archetype</th>
+        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Eval</th>
+        <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Resume</th>
         <th scope="col" className="w-10 px-3 py-2.5"><span className="sr-only">Actions</span></th>
       </tr>
     </thead>
@@ -270,11 +267,11 @@ const JobRowGroup = memo(function JobRowGroup({
         onKeyDown={handleRowKeyDown}
         className={`
           group transition-colors cursor-pointer outline-none
-          focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-indigo-500/60
-          ${selected ? 'bg-indigo-500/5' : 'hover:bg-zinc-800/40'}
-          ${isExpanded ? 'bg-zinc-800/20' : ''}
+          focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--accent)]/50
+          ${selected ? 'bg-[var(--accent)]/5' : 'even:bg-[var(--surface)] hover:bg-[var(--surface-hover)]'}
+          ${isExpanded ? 'bg-[var(--surface-sunken)]' : ''}
           ${job.status === 'archived' ? 'opacity-50' : ''}
-          border-b border-zinc-800/60
+          border-b border-[var(--border-divider)]
         `}
       >
         {/* Checkbox */}
@@ -284,16 +281,16 @@ const JobRowGroup = memo(function JobRowGroup({
             aria-label={`Select ${job.company} — ${job.role}`}
             checked={selected}
             onChange={() => onToggleSelect(job.id)}
-            className="rounded border-zinc-600 bg-zinc-800 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-zinc-900"
+            className="rounded border-[var(--text-faint)] bg-white text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-offset-white"
           />
         </td>
 
         {/* Company — with expand chevron */}
-        <td className="px-3 py-2.5 font-medium text-zinc-200 max-w-[160px]">
+        <td className="px-3 py-2.5 font-medium text-[var(--foreground)] max-w-[160px]">
           <div className="flex items-center gap-1.5 truncate">
             <svg
               aria-hidden="true"
-              className={`w-3 h-3 shrink-0 text-zinc-600 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+              className={`w-3 h-3 shrink-0 text-[var(--text-faint)] group-hover:text-[var(--foreground)] transition-[transform,color] duration-200 ${isExpanded ? 'rotate-90' : ''}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -306,13 +303,13 @@ const JobRowGroup = memo(function JobRowGroup({
         </td>
 
         {/* Role */}
-        <td className="px-3 py-2.5 text-zinc-300 max-w-[200px] truncate">
+        <td className="px-3 py-2.5 text-[var(--text-secondary)] max-w-[200px] truncate">
           {job.url ? (
             <a
               href={job.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-indigo-300 transition-colors"
+              className="underline decoration-[var(--text-faint)] hover:decoration-[var(--accent)] hover:text-[var(--accent)] transition-colors"
             >
               {job.role}
             </a>
@@ -326,8 +323,8 @@ const JobRowGroup = memo(function JobRowGroup({
           <span
             className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${
               job.source === 'scan'
-                ? 'bg-indigo-500/15 text-indigo-400'
-                : 'bg-zinc-800 text-zinc-400'
+                ? 'bg-[var(--accent)]/10 text-[var(--accent)]'
+                : 'bg-[var(--surface-sunken)] text-[var(--text-muted)]'
             }`}
           >
             {job.source}
@@ -339,13 +336,13 @@ const JobRowGroup = memo(function JobRowGroup({
           {job.archetype ? (
             <span
               className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${
-                ARCHETYPE_STYLES[job.archetype] ?? 'bg-zinc-700/50 text-zinc-400'
+                ARCHETYPE_STYLES[job.archetype] ?? 'bg-[var(--surface-sunken)] text-[var(--text-muted)]'
               }`}
             >
               {job.archetype}
             </span>
           ) : (
-            <span className="text-zinc-700 text-xs">—</span>
+            <span className="text-[var(--text-subtle)] text-xs">—</span>
           )}
         </td>
 
@@ -446,7 +443,7 @@ function ActionMenu({
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((v) => !v)}
-        className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1 text-zinc-500 hover:text-zinc-300 rounded transition-colors"
+        className="opacity-25 group-hover:opacity-100 focus:opacity-100 p-1 text-[var(--text-muted)] hover:text-[var(--foreground)] rounded transition-opacity"
       >
         <svg aria-hidden="true" className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
           <circle cx="12" cy="5" r="1.5" />
@@ -467,7 +464,7 @@ function ActionMenu({
             role="menu"
             aria-label={`Actions for ${job.company}`}
             onKeyDown={handleMenuKeyDown}
-            className="absolute right-0 z-30 mt-1 w-36 rounded border border-zinc-700 bg-zinc-900 shadow-xl py-1 text-xs"
+            className="absolute right-0 z-30 mt-1 w-36 rounded border border-[var(--border-subtle)] bg-white shadow-lg py-1 text-xs"
           >
             {job.status !== 'archived' && (
               <button
@@ -475,7 +472,7 @@ function ActionMenu({
                 tabIndex={-1}
                 type="button"
                 onClick={handleArchive}
-                className="w-full text-left px-3 py-1.5 text-zinc-300 hover:bg-zinc-800 transition-colors"
+                className="w-full text-left px-3 py-1.5 text-[var(--foreground)] hover:bg-[var(--surface-hover)] transition-colors"
               >
                 Archive
               </button>
@@ -485,7 +482,7 @@ function ActionMenu({
               tabIndex={-1}
               type="button"
               onClick={handleDelete}
-              className="w-full text-left px-3 py-1.5 text-red-400 hover:bg-zinc-800 transition-colors"
+              className="w-full text-left px-3 py-1.5 text-red-600 hover:bg-[var(--surface-hover)] transition-colors"
             >
               Delete
             </button>
