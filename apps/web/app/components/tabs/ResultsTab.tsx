@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef } from 'react'
+import { Box, Center, Flex, Text, Group, Loader, UnstyledButton } from '@mantine/core'
 import { useEvaluation } from '@/app/hooks/useEvaluation'
 import { useTracker } from '@/app/hooks/useTracker'
 import { useScanner } from '@/app/hooks/useScanner'
@@ -86,7 +87,7 @@ export function ResultsTab() {
     scanner.state.status === 'done' && scanner.state.newJobs.length > 0
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <Flex direction="column" style={{ height: '100%', overflow: 'hidden' }}>
       {/* Paste bar */}
       <UrlPasteBar onSubmit={eval_.evaluate} isLoading={isEvalLoading} ref={pasteInputRef} />
 
@@ -105,13 +106,20 @@ export function ResultsTab() {
 
       {/* Batch concurrency indicator */}
       {isBatchRunning && (
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--accent)]/8 border-b border-[var(--accent)]/20 text-xs text-[var(--accent)]">
-          <svg aria-hidden="true" className="w-3 h-3 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
+        <Group
+          gap="xs"
+          p="6px 12px"
+          fz="xs"
+          c="var(--accent)"
+          style={{
+            background: 'rgba(255, 56, 92, 0.08)',
+            borderBottom: '1px solid rgba(255, 56, 92, 0.2)',
+            flexShrink: 0,
+          }}
+        >
+          <Loader size={12} color="var(--accent)" style={{ flexShrink: 0 }} />
           Evaluating {batch.state.completed} of {batch.state.total} jobs…
-        </div>
+        </Group>
       )}
 
       {/* Scan progress panel */}
@@ -147,40 +155,25 @@ export function ResultsTab() {
 
       {/* Loading skeleton */}
       {tracker.state.isLoading && (
-        <div
-          role="status"
-          aria-label="Loading jobs"
-          className="flex items-center justify-center flex-1 text-[var(--text-faint)] text-sm"
-        >
-          <svg
-            aria-hidden="true"
-            className="w-4 h-4 animate-spin mr-2 text-[var(--accent)]"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          Loading jobs…
-        </div>
+        <Center role="status" aria-label="Loading jobs" style={{ flex: 1 }}>
+          <Group gap="xs">
+            <Loader size={16} color="var(--accent)" />
+            <Text size="sm" c="dimmed">Loading jobs…</Text>
+          </Group>
+        </Center>
       )}
 
       {/* Error state */}
       {!tracker.state.isLoading && tracker.state.error && (
-        <div
-          role="alert"
-          className="flex items-center justify-center flex-1 text-red-500 text-sm gap-2"
-        >
-          <span>✕</span>
-          <span>{tracker.state.error}</span>
-          <button
-            type="button"
-            onClick={tracker.refresh}
-            className="underline text-xs ml-1"
-          >
-            Retry
-          </button>
-        </div>
+        <Center role="alert" style={{ flex: 1 }}>
+          <Group gap="xs">
+            <Text size="sm" c="red">✕</Text>
+            <Text size="sm" c="red">{tracker.state.error}</Text>
+            <UnstyledButton type="button" onClick={tracker.refresh} fz="xs" c="#ef4444" ml={4} style={{ textDecoration: 'underline' }}>
+              Retry
+            </UnstyledButton>
+          </Group>
+        </Center>
       )}
 
       {/* Job table */}
@@ -205,6 +198,6 @@ export function ResultsTab() {
           onDismiss={scanner.dismissScan}
         />
       )}
-    </div>
+    </Flex>
   )
 }

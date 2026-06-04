@@ -1,3 +1,4 @@
+import { Box, Flex, Paper, Text, Group, Center } from '@mantine/core'
 import type { UIMessage } from './ChatPanel'
 
 type Props = {
@@ -9,63 +10,89 @@ export function ChatMessage({ message }: Props) {
 
   if (isUser) {
     return (
-      <div className="flex justify-end">
-        <div
-          className="max-w-[85%] rounded-2xl rounded-tr-sm px-3 py-2 bg-[var(--foreground)] text-white text-sm leading-relaxed break-words"
+      <Flex justify="flex-end">
+        <Paper
+          shadow="none"
+          maw="85%"
+          p="8px 12px"
+          bg="var(--foreground)"
+          c="white"
+          fz="sm"
+          lh={1.5}
+          style={{
+            borderRadius: '18px 18px 4px 18px',
+            wordBreak: 'break-word',
+          }}
         >
           {message.content}
-        </div>
-      </div>
+        </Paper>
+      </Flex>
     )
   }
 
   return (
-    <div className="flex gap-2 items-start">
+    <Flex gap="xs" align="flex-start">
       {/* Avatar */}
-      <div
-        className="w-6 h-6 rounded-full bg-[var(--surface-sunken)] border border-[var(--border-subtle)] flex items-center justify-center shrink-0 mt-0.5"
+      <Center
+        w={24}
+        h={24}
+        bg="var(--surface-sunken)"
+        bd="1px solid var(--border-subtle)"
+        style={{ borderRadius: '50%', flexShrink: 0, marginTop: 2 }}
         aria-hidden="true"
       >
-        <span className="text-[10px] font-semibold text-[var(--text-muted)]">T</span>
-      </div>
+        <Text fw={600} fz={10} c="var(--text-muted)">T</Text>
+      </Center>
 
-      <div className="flex-1 min-w-0">
+      <Box style={{ flex: 1, minWidth: 0 }}>
         {/* Step indicator */}
         {message.activeStep && (
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" aria-hidden="true" />
-            <span className="text-[11px] text-[var(--text-muted)] font-mono">{message.activeStep}</span>
-          </div>
+          <Group gap={6} mb={6}>
+            <Box
+              w={6}
+              h={6}
+              bg="#3b82f6"
+              style={{ borderRadius: '50%', animation: 'pulse 2s ease-in-out infinite', flexShrink: 0 }}
+              aria-hidden="true"
+            />
+            <Text size="xs" ff="monospace" c="dimmed">{message.activeStep}</Text>
+          </Group>
         )}
 
         {/* Content */}
-        <div
-          className={[
-            'text-sm leading-relaxed text-[var(--foreground)] break-words',
-            message.isError ? 'text-red-600' : '',
-            message.isStreaming && !message.content ? 'min-h-[1.25rem]' : '',
-          ]
-            .filter(Boolean)
-            .join(' ')}
+        <Paper
+          shadow="none"
+          withBorder
+          p="xs"
+          fz="sm"
+          lh={1.5}
+          style={{
+            color: message.isError ? '#dc2626' : 'var(--foreground)',
+            wordBreak: 'break-word',
+            minHeight: message.isStreaming && !message.content ? '1.25rem' : undefined,
+            borderColor: 'var(--border)',
+          }}
         >
           {message.content ? (
             <span className={message.isStreaming ? 'streaming-cursor' : ''}>
               {message.content}
             </span>
           ) : message.isStreaming ? (
-            <span className="inline-flex gap-0.5 items-center h-4">
+            <Group gap={2} align="center" style={{ height: 16 }}>
               {[0, 1, 2].map((i) => (
-                <span
+                <Box
                   key={i}
-                  className="w-1 h-1 bg-[var(--text-faint)] rounded-full animate-bounce"
-                  style={{ animationDelay: `${i * 0.15}s` }}
+                  w={4}
+                  h={4}
+                  bg="var(--text-faint)"
+                  style={{ borderRadius: '50%', animation: `bounce 1s ease-in-out ${i * 0.15}s infinite` }}
                   aria-hidden="true"
                 />
               ))}
-            </span>
+            </Group>
           ) : null}
-        </div>
-      </div>
-    </div>
+        </Paper>
+      </Box>
+    </Flex>
   )
 }

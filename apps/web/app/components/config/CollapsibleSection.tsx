@@ -2,6 +2,7 @@
 
 import { useState, useId } from 'react'
 import type { ReactNode } from 'react'
+import { Collapse, Group, Box, Text } from '@mantine/core'
 import { SaveIndicator } from './SaveIndicator'
 import type { SaveStatus } from './SaveIndicator'
 
@@ -22,19 +23,23 @@ export function CollapsibleSection({
   const [isOpen, setIsOpen] = useState(defaultOpen)
 
   return (
-    <section className="border-b border-[var(--border)] last:border-b-0">
+    <section style={{ borderBottom: '1px solid var(--border)' }}>
       <button
         type="button"
         onClick={() => setIsOpen((o) => !o)}
         aria-expanded={isOpen}
         aria-controls={panelId}
-        className="flex items-center justify-between w-full px-6 py-4 text-left hover:bg-[var(--surface)] transition-colors"
+        className="collapsible-trigger"
       >
-        <span className="text-sm font-semibold text-zinc-900 tracking-tight">{title}</span>
-        <div className="flex items-center gap-3">
+        <Text component="span" size="sm" fw={600} c="#18181b" lts="-0.01em">
+          {title}
+        </Text>
+        <Group gap={12}>
           <SaveIndicator status={saveStatus} />
           <svg
-            className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+            className="collapsible-chevron"
+            data-open={isOpen ? 'true' : undefined}
+            style={{ width: 16, height: 16, color: '#a1a1aa' }}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -43,18 +48,11 @@ export function CollapsibleSection({
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
-        </div>
+        </Group>
       </button>
-      <div
-        id={panelId}
-        style={{
-          overflow: 'hidden',
-          maxHeight: isOpen ? '4000px' : '0',
-          transition: 'max-height 0.25s ease',
-        }}
-      >
-        <div className="px-6 pb-6 pt-1">{children}</div>
-      </div>
+      <Collapse id={panelId} expanded={isOpen}>
+        <Box pt={4} px={24} pb={24}>{children}</Box>
+      </Collapse>
     </section>
   )
 }

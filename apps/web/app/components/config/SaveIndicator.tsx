@@ -1,3 +1,5 @@
+import { Text } from '@mantine/core'
+
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
 type Props = { status: SaveStatus }
@@ -7,16 +9,17 @@ export function SaveIndicator({ status }: Props) {
 
   const label =
     status === 'saving' ? 'Saving…' : status === 'saved' ? 'Saved' : 'Error saving'
+
   const color =
     status === 'saving'
-      ? 'text-[var(--text-faint)]'
+      ? 'var(--text-faint)'
       : status === 'saved'
-        ? 'text-emerald-600'
-        : 'text-red-500'
+        ? '#059669'
+        : '#ef4444'
 
   return (
-    <span role="status" aria-live="polite" className={`text-[11px] font-medium ${color}`}>
+    <Text component="span" role="status" aria-live="polite" fz={11} fw={500} c={color}>
       {label}
-    </span>
+    </Text>
   )
 }

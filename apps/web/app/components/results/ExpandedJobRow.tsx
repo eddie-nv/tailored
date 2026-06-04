@@ -1,6 +1,7 @@
 'use client'
 
 import { memo, useId } from 'react'
+import { Box, Group, UnstyledButton } from '@mantine/core'
 import type { Job, GeneratedResume } from '@tailored/db'
 import { EvalReportRenderer } from './EvalReportRenderer'
 import { StatusDropdown } from './StatusDropdown'
@@ -27,57 +28,45 @@ export const ExpandedJobRow = memo(function ExpandedJobRow({
 
   return (
     <tr role="presentation">
-      <td colSpan={colSpan} className="p-0 border-b border-[var(--border-divider)]">
+      <td colSpan={colSpan} style={{ padding: 0, borderBottom: '1px solid var(--border-divider)' }}>
         <div
           style={{
-            maxHeight: isExpanded ? '900px' : '0px',
+            maxHeight: isExpanded ? 900 : 0,
             overflow: 'hidden',
             transition: 'max-height 350ms cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
-          <div
+          <Box
             id={panelId}
             role="region"
             aria-label="Job details"
-            inert={!isExpanded}
-            className="mx-3 mb-3"
+            inert={!isExpanded || undefined}
+            style={{ margin: '0 12px 12px' }}
           >
-            {/* Eval report */}
-            <div className="px-5 py-4">
+            <Box p="16px 20px">
               <EvalReportRenderer evalReport={job.evalReport} />
-            </div>
+            </Box>
 
-            {/* Footer: status + archive */}
-            <div className="flex items-center gap-4 px-5 py-3 border-t border-[var(--border-divider)] bg-[var(--surface)]">
-              <StatusDropdown
-                jobId={job.id}
-                status={job.status}
-                onUpdate={onUpdateStatus}
-              />
+            <Group
+              gap={16}
+              p="12px 20px"
+              bg="var(--surface)"
+              style={{ borderTop: '1px solid var(--border-divider)' }}
+            >
+              <StatusDropdown jobId={job.id} status={job.status} onUpdate={onUpdateStatus} />
               {job.status !== 'archived' && (
-                <button
-                  type="button"
-                  onClick={() => onArchive(job.id)}
-                  className="
-                    shrink-0 rounded px-2.5 py-1 text-xs font-medium
-                    text-[var(--text-muted)] border border-[var(--border)] bg-[var(--surface-sunken)]
-                    hover:text-[var(--foreground)] hover:border-[var(--text-faint)] hover:bg-[var(--border-divider)]
-                    focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/60
-                    transition-colors
-                  "
-                >
+                <UnstyledButton type="button" onClick={() => onArchive(job.id)} className="archive-btn">
                   Archive
-                </button>
+                </UnstyledButton>
               )}
-            </div>
+            </Group>
 
-            {/* Resume history */}
             {job.resumes.length > 0 && (
-              <div className="px-5 py-4 border-t border-[var(--border-divider)]">
+              <Box p="16px 20px" style={{ borderTop: '1px solid var(--border-divider)' }}>
                 <ResumeHistory resumes={job.resumes} jobId={job.id} />
-              </div>
+              </Box>
             )}
-          </div>
+          </Box>
         </div>
       </td>
     </tr>

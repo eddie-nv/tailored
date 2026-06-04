@@ -2,6 +2,7 @@
 
 import { useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Group } from '@mantine/core'
 
 type Tab = 'config' | 'results'
 
@@ -34,33 +35,25 @@ export function TabBar() {
   }
 
   return (
-    <div role="tablist" aria-label="Main navigation" className="flex items-center gap-0.5">
-      {TABS.map((tab, index) => {
-        const isActive = active === tab.id
-        return (
-          <button
-            key={tab.id}
-            id={`${tab.id}-tab`}
-            role="tab"
-            aria-selected={isActive}
-            aria-controls="main-tab-panel"
-            tabIndex={isActive ? 0 : -1}
-            ref={(el) => { tabRefs.current[index] = el }}
-            onClick={() => setTab(tab.id)}
-            onKeyDown={(e) => handleKeyDown(e, index)}
-            className={[
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
-              isActive
-                ? 'bg-[var(--foreground)] text-white'
-                : 'text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-sunken)]',
-            ].join(' ')}
-          >
-            <span aria-hidden="true">{tab.icon}</span>
-            {tab.label}
-          </button>
-        )
-      })}
-    </div>
+    <Group role="tablist" aria-label="Main navigation" gap={2}>
+      {TABS.map((tab, index) => (
+        <button
+          key={tab.id}
+          id={`${tab.id}-tab`}
+          role="tab"
+          aria-selected={active === tab.id}
+          aria-controls="main-tab-panel"
+          tabIndex={active === tab.id ? 0 : -1}
+          ref={(el) => { tabRefs.current[index] = el }}
+          onClick={() => setTab(tab.id)}
+          onKeyDown={(e) => handleKeyDown(e, index)}
+          className="tab-btn"
+        >
+          <span aria-hidden="true">{tab.icon}</span>
+          {tab.label}
+        </button>
+      ))}
+    </Group>
   )
 }
 

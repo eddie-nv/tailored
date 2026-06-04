@@ -1,6 +1,7 @@
 'use client'
 
 import { Component, type ReactNode } from 'react'
+import { Text, Center, Stack, Anchor } from '@mantine/core'
 
 interface Props {
   children: ReactNode
@@ -33,20 +34,15 @@ export class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback
 
       return (
-        <div
-          role="alert"
-          className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center"
-        >
-          <p className="text-sm font-semibold text-zinc-300">{this.props.label ?? 'Panel error'}</p>
-          <p className="text-xs text-zinc-500 max-w-xs">{this.state.message}</p>
-          <button
-            type="button"
-            onClick={this.handleReset}
-            className="mt-2 text-xs text-indigo-400 hover:text-indigo-300 underline"
-          >
-            Try again
-          </button>
-        </div>
+        <Center h="100%" role="alert" p="xl">
+          <Stack align="center" gap="xs" ta="center">
+            <Text size="sm" fw={600} c="dimmed">{this.props.label ?? 'Panel error'}</Text>
+            <Text size="xs" c="dimmed" maw={280}>{this.state.message}</Text>
+            <Anchor component="button" type="button" size="xs" mt="xs" onClick={this.handleReset}>
+              Try again
+            </Anchor>
+          </Stack>
+        </Center>
       )
     }
 

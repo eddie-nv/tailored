@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { EventType } from '@ag-ui/core'
 import type { BaseEvent } from '@ag-ui/core'
+import { ScrollArea, Stack, Box, Text, Center } from '@mantine/core'
 import { useAgUI } from '../../providers/AgUIProvider'
 import { ChatMessage } from './ChatMessage'
 import { ChatInput } from './ChatInput'
@@ -141,35 +142,45 @@ export function ChatPanel() {
 
   return (
     <>
-      {/* Message list */}
-      <div
-        className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2"
+      <ScrollArea
+        style={{ flex: 1 }}
+        p="xs"
         role="log"
         aria-live="polite"
         aria-label="Chat messages"
       >
-        {isEmpty && (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-4">
-            <div className="w-10 h-10 rounded-full bg-[var(--foreground)] flex items-center justify-center">
-              <span className="text-white text-base">T</span>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-[var(--foreground)]">What are you looking for today?</p>
-              <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
-                Paste a job URL, ask me to scan portals, or update your profile.
-              </p>
-            </div>
-          </div>
-        )}
+        <Stack gap="xs">
+          {isEmpty && (
+            <Center mih={200}>
+              <Stack align="center" gap="sm" ta="center" px="md">
+                <Center
+                  w={40}
+                  h={40}
+                  bg="var(--foreground)"
+                  style={{ borderRadius: '50%' }}
+                >
+                  <Text c="white" size="md" fw={600}>T</Text>
+                </Center>
+                <Stack gap={4}>
+                  <Text size="sm" fw={600} c="var(--foreground)">
+                    What are you looking for today?
+                  </Text>
+                  <Text size="xs" c="dimmed" lh={1.5}>
+                    Paste a job URL, ask me to scan portals, or update your profile.
+                  </Text>
+                </Stack>
+              </Stack>
+            </Center>
+          )}
 
-        {messages.map((msg) => (
-          <ChatMessage key={msg.id} message={msg} />
-        ))}
+          {messages.map((msg) => (
+            <ChatMessage key={msg.id} message={msg} />
+          ))}
 
-        <div ref={bottomRef} aria-hidden="true" />
-      </div>
+          <div ref={bottomRef} aria-hidden="true" />
+        </Stack>
+      </ScrollArea>
 
-      {/* Input */}
       <ChatInput onSubmit={submit} isLoading={isRunning} />
     </>
   )

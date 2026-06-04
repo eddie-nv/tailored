@@ -1,6 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
+import { AppShell as MantineAppShell, Box, Text, Group } from '@mantine/core'
 import { ChatPanel } from '../chat/ChatPanel'
 import { TabBar } from './TabBar'
 import type { Tab } from './TabBar'
@@ -18,39 +19,50 @@ export function AppShell() {
   const activeTab = (searchParams.get('tab') as Tab | null) ?? 'results'
 
   return (
-    <div className="flex h-full overflow-hidden bg-white">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-[var(--foreground)] focus:rounded-md focus:shadow-lg focus:ring-2 focus:ring-[var(--accent)] text-sm font-medium"
-      >
+    <MantineAppShell
+      navbar={{ width: 320, breakpoint: 'sm' }}
+      withBorder={false}
+      style={{ height: '100vh' }}
+    >
+      <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
 
-      {/* Chat panel — fixed left column */}
-      <aside
-        className="w-80 shrink-0 flex flex-col border-r border-[var(--border)] bg-[var(--surface)]"
+      <MantineAppShell.Navbar
+        bg='var(--surface)'
+        component="aside"
         aria-label="Chat"
+        style={{
+          borderRight: '1px solid var(--border)',
+        }}
       >
-        <div className="flex items-center gap-2 px-4 h-12 border-b border-[var(--border)] shrink-0">
-          <h1 className="text-sm font-semibold tracking-tight text-[var(--foreground)] m-0">Tailored</h1>
-          <span className="text-xs text-[var(--text-muted)] font-mono">AI</span>
-        </div>
+        <Group px="md" h='48' gap='5'>
+          <Text
+            size="sm"
+            lts='-0.01em'
+            c='var(--foreground)'
+            fw={600}
+          >
+            Tailored
+          </Text>
+          <Text size="xs" ff="monospace" c="dimmed">AI</Text>
+        </Group>
         <ErrorBoundary label="Chat panel error">
           <ChatPanel />
         </ErrorBoundary>
-      </aside>
+      </MantineAppShell.Navbar>
 
-      {/* Main panel */}
-      <div className="flex flex-col flex-1 min-w-0">
-        {/* Tab bar */}
-        <header className="flex items-center gap-2 px-4 h-12 border-b border-[var(--border)] shrink-0">
+      <MantineAppShell.Main>
+        <Group component="header" align='center' gap='8' px='16px'>
           <TabBar />
-        </header>
-
-        {/* Tab content */}
-        <main id="main-content" className="flex-1 overflow-auto">
+        </Group>
+        <Box
+          component="main"
+          flex={1}
+          mih={0}
+          style={{ overflowY: 'auto' }}
+        >
           <div
-            id="main-tab-panel"
             role="tabpanel"
             aria-labelledby={`${activeTab}-tab`}
             tabIndex={-1}
@@ -59,8 +71,8 @@ export function AppShell() {
               <TabContent tab={activeTab} />
             </ErrorBoundary>
           </div>
-        </main>
-      </div>
-    </div>
+        </Box>
+      </MantineAppShell.Main>
+    </MantineAppShell>
   )
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import { Box, Group, Paper, Text, UnstyledButton } from '@mantine/core'
 import type { InterruptData } from '@/app/hooks/useEvaluation'
 import { scoreStyle } from '@/app/lib/scoreStyles'
 
@@ -13,53 +14,55 @@ export function InterruptToast({ interrupt, onConfirm, onDismiss }: InterruptToa
   const { score, archetype, cvMatchPct } = interrupt.metadata
 
   return (
-    <div
+    <Paper
       role="alert"
       aria-labelledby="interrupt-title"
       aria-describedby="interrupt-desc"
-      className="mx-3 mb-3 rounded border border-[var(--border-subtle)] bg-white overflow-hidden shadow-sm"
+      withBorder
+      radius={8}
+      bg="white"
+      shadow="xs"
+      style={{ margin: '0 12px 12px', overflow: 'hidden' }}
     >
-      <div className="px-4 py-3 flex items-start gap-3">
-        <span className="text-lg shrink-0 mt-0.5" aria-hidden="true">
-          ✓
-        </span>
-        <div className="flex-1 min-w-0">
-          <p id="interrupt-title" className="text-sm font-semibold text-[var(--foreground)]">
+      <Group align="flex-start" gap={12} p="12px 16px">
+        <Text component="span" fz="lg" aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }}>✓</Text>
+        <Box style={{ flex: 1, minWidth: 0 }}>
+          <Text component="p" id="interrupt-title" size="sm" fw={600} c="var(--foreground)" style={{ margin: 0 }}>
             Evaluation complete
-          </p>
-          <p id="interrupt-desc" className="text-xs text-[var(--text-muted)] mt-0.5">
+          </Text>
+          <Text component="p" id="interrupt-desc" size="xs" c="var(--text-muted)" style={{ margin: '2px 0 0' }}>
             {interrupt.message}
-          </p>
-          <div className="flex items-center gap-2 mt-2 flex-wrap">
-            <span
-              aria-label={`Score: ${score}`}
-              className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${scoreStyle(score)}`}
-            >
-              {score}
-            </span>
-            <span className="text-xs text-[var(--text-faint)]">
+          </Text>
+          <Group gap={8} mt={8} style={{ flexWrap: 'wrap' }}>
+            <span aria-label={`Score: ${score}`} style={scoreStyle(score)}>{score}</span>
+            <Text component="span" size="xs" c="var(--text-faint)">
               {archetype} · {cvMatchPct}% CV match
-            </span>
-          </div>
-        </div>
-      </div>
+            </Text>
+          </Group>
+        </Box>
+      </Group>
 
-      <div className="flex border-t border-[var(--border-divider)] divide-x divide-[var(--border-divider)]">
-        <button
-          type="button"
+      <Group gap={0} style={{ borderTop: '1px solid var(--border-divider)' }}>
+        <UnstyledButton
           onClick={onDismiss}
-          className="flex-1 py-2 text-xs text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)] transition-colors"
+          fz="xs"
+          c="var(--text-muted)"
+          style={{ flex: 1, padding: '8px 0', borderRight: '1px solid var(--border-divider)', textAlign: 'center' }}
+          className="interrupt-dismiss-btn"
         >
           Dismiss
-        </button>
-        <button
-          type="button"
+        </UnstyledButton>
+        <UnstyledButton
           onClick={onConfirm}
-          className="flex-1 py-2 text-xs font-medium text-[var(--accent)] hover:text-[var(--accent-hover)] hover:bg-[var(--surface-hover)] transition-colors"
+          fz="xs"
+          fw={500}
+          c="var(--accent)"
+          style={{ flex: 1, padding: '8px 0', textAlign: 'center' }}
+          className="interrupt-confirm-btn"
         >
           Add to tracker
-        </button>
-      </div>
-    </div>
+        </UnstyledButton>
+      </Group>
+    </Paper>
   )
 }

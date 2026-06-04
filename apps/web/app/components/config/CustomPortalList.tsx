@@ -1,5 +1,6 @@
 'use client'
 
+import { Stack, Paper, Group, Box, Text, Anchor, Badge, ActionIcon, Switch } from '@mantine/core'
 import { detectPortalProvider } from '../../lib/detectPortalProvider'
 
 type CustomPortal = {
@@ -18,68 +19,58 @@ type Props = {
 export function CustomPortalList({ portals, onToggle, onDelete }: Props) {
   if (portals.length === 0) {
     return (
-      <p className="text-xs text-zinc-400 italic">
+      <Text size="xs" c="#a1a1aa" fs="italic">
         No custom portals yet — add a company career page below.
-      </p>
+      </Text>
     )
   }
 
   return (
-    <ul className="space-y-2">
+    <Stack component="ul" gap={8} style={{ margin: 0, padding: 0, listStyle: 'none' }}>
       {portals.map((portal) => {
         const provider = detectPortalProvider(portal.url)
         return (
-          <li
-            key={portal.id}
-            className="flex items-center gap-3 py-2 px-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-white group"
-          >
-            <button
-              type="button"
-              role="switch"
-              aria-checked={portal.enabled}
-              onClick={() => onToggle(portal.id, !portal.enabled)}
-              className={`relative w-7 h-4 rounded-full transition-colors flex-shrink-0 ${
-                portal.enabled ? 'bg-[var(--accent)]' : 'bg-zinc-200'
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-transform ${
-                  portal.enabled ? 'translate-x-3' : 'translate-x-0'
-                }`}
+          <Paper component="li" key={portal.id} className="portal-item" withBorder p="8px 12px" bg="white" radius="sm">
+            <Group gap={12}>
+              <Switch
+                checked={portal.enabled}
+                onChange={(e) => onToggle(portal.id, e.currentTarget.checked)}
+                size="xs"
+                aria-label={portal.enabled ? `Disable ${portal.name}` : `Enable ${portal.name}`}
               />
-            </button>
 
-            <span className="flex-1 min-w-0">
-              <span className="block text-sm font-medium text-zinc-800 truncate">{portal.name}</span>
-              <a
-                href={portal.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block text-xs text-zinc-400 truncate hover:text-[var(--accent)] transition-colors"
+              <Box style={{ flex: 1, minWidth: 0 }}>
+                <Text size="sm" fw={500} c="#27272a" truncate>
+                  {portal.name}
+                </Text>
+                <Anchor href={portal.url} target="_blank" rel="noopener noreferrer" size="xs" c="dimmed" truncate display="block">
+                  {portal.url}
+                </Anchor>
+              </Box>
+
+              {provider !== 'Unknown' && (
+                <Badge size="xs" fw={600} style={{ flexShrink: 0, background: 'rgba(255, 56, 92, 0.1)', color: 'var(--accent)', fontSize: '0.625rem' }}>
+                  {provider}
+                </Badge>
+              )}
+
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                type="button"
+                onClick={() => onDelete(portal.id)}
+                aria-label={`Remove ${portal.name}`}
+                style={{ flexShrink: 0 }}
               >
-                {portal.url}
-              </a>
-            </span>
-
-            {provider !== 'Unknown' && (
-              <span className="flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)]">
-                {provider}
-              </span>
-            )}
-
-            <button
-              type="button"
-              onClick={() => onDelete(portal.id)}
-              aria-label={`Remove ${portal.name}`}
-              className="flex-shrink-0 text-zinc-300 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </button>
-          </li>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </ActionIcon>
+            </Group>
+          </Paper>
         )
       })}
-    </ul>
+    </Stack>
   )
 }

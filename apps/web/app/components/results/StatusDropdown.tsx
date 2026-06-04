@@ -1,6 +1,7 @@
 'use client'
 
-import { memo, useState, useCallback, useId } from 'react'
+import { memo, useState, useCallback, useId, type CSSProperties } from 'react'
+import { Box, Group, Loader, Text } from '@mantine/core'
 
 const STATUS_OPTIONS = [
   { value: 'new', label: 'New' },
@@ -12,12 +13,12 @@ const STATUS_OPTIONS = [
 
 type JobStatus = (typeof STATUS_OPTIONS)[number]['value']
 
-const STATUS_STYLES: Record<string, string> = {
-  new: 'text-[var(--text-muted)] bg-[var(--surface-sunken)] border-[var(--border-subtle)]',
-  reviewed: 'text-blue-600 bg-blue-50 border-blue-200',
-  applying: 'text-amber-600 bg-amber-50 border-amber-200',
-  applied: 'text-emerald-600 bg-emerald-50 border-emerald-200',
-  archived: 'text-[var(--text-faint)] bg-[var(--surface)] border-[var(--border-subtle)]',
+const STATUS_STYLES: Record<string, CSSProperties> = {
+  new:      { color: 'var(--text-muted)', background: 'var(--surface-sunken)', borderColor: 'var(--border-subtle)' },
+  reviewed: { color: '#2563eb', background: '#eff6ff', borderColor: '#bfdbfe' },
+  applying: { color: '#d97706', background: '#fffbeb', borderColor: '#fde68a' },
+  applied:  { color: '#059669', background: '#ecfdf5', borderColor: '#a7f3d0' },
+  archived: { color: 'var(--text-faint)', background: 'var(--surface)', borderColor: 'var(--border-subtle)' },
 }
 
 interface StatusDropdownProps {
@@ -52,47 +53,38 @@ export const StatusDropdown = memo(function StatusDropdown({
     [jobId, localStatus, onUpdate],
   )
 
-  const styleClass = STATUS_STYLES[localStatus] ?? STATUS_STYLES['new']!
+  const statusStyle = STATUS_STYLES[localStatus] ?? STATUS_STYLES['new']!
 
   return (
-    <div className="flex items-center gap-2">
-      <label htmlFor={selectId} className="text-xs text-[var(--text-faint)] font-medium shrink-0">Status</label>
-      <div className="relative">
+    <Group gap={8}>
+      <Text component="label" htmlFor={selectId} size="xs" c="var(--text-faint)" fw={500} style={{ flexShrink: 0 }}>
+        Status
+      </Text>
+      <Box pos="relative">
         <select
           id={selectId}
           value={localStatus}
           onChange={handleChange}
           disabled={isSaving}
-          className={`
-            appearance-none rounded border px-2.5 py-1 pr-6 text-xs font-medium
-            focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/60
-            disabled:opacity-50 disabled:cursor-not-allowed
-            transition-colors cursor-pointer
-            ${styleClass}
-          `}
+          className="status-select"
+          style={statusStyle}
         >
           {STATUS_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value} className="bg-white text-[var(--foreground)]">
+            <option key={opt.value} value={opt.value} style={{ background: 'white', color: 'var(--foreground)' }}>
               {opt.label}
             </option>
           ))}
         </select>
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2"
-        >
+        <div aria-hidden="true" style={{ pointerEvents: 'none', position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)' }}>
           {isSaving ? (
-            <svg className="w-3 h-3 animate-spin text-current opacity-60" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
+            <Loader size={12} style={{ opacity: 0.6 }} />
           ) : (
-            <svg className="w-3 h-3 text-current opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg style={{ width: 12, height: 12, opacity: 0.5, color: 'currentColor' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
           )}
         </div>
-      </div>
-    </div>
+      </Box>
+    </Group>
   )
 })

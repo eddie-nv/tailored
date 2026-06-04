@@ -1,6 +1,7 @@
 'use client'
 
 import { memo, useState, useCallback, useRef, useEffect, useId } from 'react'
+import { Group, Text, Textarea } from '@mantine/core'
 
 interface InlineNotesFieldProps {
   jobId: string
@@ -21,9 +22,7 @@ export const InlineNotesField = memo(function InlineNotesField({
   const modeRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!isEditing) {
-      setLocalNotes(notes ?? '')
-    }
+    if (!isEditing) setLocalNotes(notes ?? '')
   }, [notes, isEditing])
 
   const enterEdit = useCallback(() => {
@@ -36,7 +35,6 @@ export const InlineNotesField = memo(function InlineNotesField({
     const trimmed = localNotes.trim()
     const prev = notes ?? ''
     if (trimmed === prev) return
-
     setIsSaving(true)
     try {
       await onUpdate(jobId, trimmed)
@@ -68,31 +66,37 @@ export const InlineNotesField = memo(function InlineNotesField({
   }, [isEditing])
 
   return (
-    <div className="flex items-start gap-2 flex-1 min-w-0">
+    <Group align="flex-start" gap={8} style={{ flex: 1, minWidth: 0 }}>
       <div ref={modeRef} role="status" aria-live="polite" className="sr-only" />
-      <span className="text-xs text-[var(--text-faint)] font-medium shrink-0 mt-1" aria-hidden="true">Notes</span>
+      <Text component="span" size="xs" c="var(--text-faint)" fw={500} aria-hidden="true" style={{ flexShrink: 0, marginTop: 4 }}>
+        Notes
+      </Text>
       {isEditing ? (
         <>
-          <span id={hintId} className="sr-only">
-            Press Ctrl+Enter to save, Escape to cancel.
-          </span>
-          <textarea
+          <span id={hintId} className="sr-only">Press Ctrl+Enter to save, Escape to cancel.</span>
+          <Textarea
             ref={textareaRef}
             value={localNotes}
             onChange={(e) => setLocalNotes(e.target.value)}
             onBlur={() => void save()}
             onKeyDown={handleKeyDown}
-            rows={2}
             placeholder="Add notes…"
             aria-label="Job notes"
             aria-describedby={hintId}
-            className="
-              flex-1 min-w-0 resize-none rounded border border-[var(--text-faint)]
-              bg-white px-2.5 py-1.5 text-xs text-[var(--foreground)]
-              placeholder:text-[var(--text-faint)] leading-relaxed
-              focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/60 focus:border-[var(--accent)]/60
-              transition-colors
-            "
+            autosize
+            minRows={2}
+            styles={{
+              input: {
+                resize: 'none',
+                padding: '6px 10px',
+                fontSize: '0.75rem',
+                lineHeight: 1.5,
+              },
+              root: {
+                flex: 1,
+                minWidth: 0,
+              },
+            }}
           />
         </>
       ) : (
@@ -101,23 +105,17 @@ export const InlineNotesField = memo(function InlineNotesField({
           onClick={enterEdit}
           disabled={isSaving}
           aria-label="Edit notes"
-          className="
-            flex-1 min-w-0 text-left rounded px-2.5 py-1.5 text-xs leading-relaxed
-            text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] focus:outline-none
-            focus:ring-1 focus:ring-[var(--accent)]/60
-            disabled:opacity-50 disabled:cursor-not-allowed
-            transition-colors cursor-text
-          "
+          className="notes-view-btn"
         >
           {isSaving ? (
-            <span className="text-[var(--text-faint)] italic">Saving…</span>
+            <Text component="span" c="var(--text-faint)" fs="italic">Saving…</Text>
           ) : localNotes ? (
-            <span className="text-[var(--text-secondary)] whitespace-pre-wrap">{localNotes}</span>
+            <Text component="span" c="var(--text-secondary)" style={{ whiteSpace: 'pre-wrap' }}>{localNotes}</Text>
           ) : (
-            <span className="text-[var(--text-faint)] italic">Click to add notes…</span>
+            <Text component="span" c="var(--text-faint)" fs="italic">Click to add notes…</Text>
           )}
         </button>
       )}
-    </div>
+    </Group>
   )
 })

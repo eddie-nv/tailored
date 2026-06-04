@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback } from 'react'
+import { Checkbox, Stack, Box, Group, SimpleGrid, Text } from '@mantine/core'
 import { PORTAL_GROUPS } from './portals'
 
 type Props = {
@@ -36,50 +37,41 @@ export function PresetPortals({ value, onChange }: Props) {
   )
 
   return (
-    <div className="space-y-5">
+    <Stack gap={20}>
       {PORTAL_GROUPS.map((group) => {
         const groupKeys = group.portals.map((p) => p.key)
         const allSelected = groupKeys.every((k) => selectedSet.has(k))
         const someSelected = !allSelected && groupKeys.some((k) => selectedSet.has(k))
 
         return (
-          <div key={group.name}>
-            <div className="flex items-center gap-2 mb-2">
-              <input
-                type="checkbox"
+          <Box key={group.name}>
+            <Group gap={8} mb={8}>
+              <Checkbox
                 id={`group-${group.name}`}
                 checked={allSelected}
-                ref={(el: HTMLInputElement | null) => {
-                  if (el) el.indeterminate = someSelected
-                }}
+                indeterminate={someSelected}
                 onChange={() => toggleGroup(groupKeys)}
-                className="w-3.5 h-3.5 rounded border-zinc-300 accent-[var(--accent)]"
+                color="brand"
+                size="xs"
+                label={<Text size="xs" fw={600} tt="uppercase" lts="0.1em" c="#71717a">{group.name}</Text>}
               />
-              <label
-                htmlFor={`group-${group.name}`}
-                className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 cursor-pointer"
-              >
-                {group.name}
-              </label>
-            </div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 pl-5">
+            </Group>
+            <SimpleGrid cols={2} spacing={16} verticalSpacing={6} pl={20}>
               {group.portals.map((portal) => (
-                <label key={portal.key} className="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={selectedSet.has(portal.key)}
-                    onChange={() => toggle(portal.key)}
-                    className="w-3.5 h-3.5 rounded border-zinc-300 accent-[var(--accent)]"
-                  />
-                  <span className="text-sm text-zinc-700 group-hover:text-zinc-900 transition-colors">
-                    {portal.label}
-                  </span>
-                </label>
+                <Checkbox
+                  key={portal.key}
+                  checked={selectedSet.has(portal.key)}
+                  onChange={() => toggle(portal.key)}
+                  color="brand"
+                  size="xs"
+                  label={portal.label}
+                  styles={{ label: { fontSize: '0.875rem', color: '#3f3f46', cursor: 'pointer' } }}
+                />
               ))}
-            </div>
-          </div>
+            </SimpleGrid>
+          </Box>
         )
       })}
-    </div>
+    </Stack>
   )
 }

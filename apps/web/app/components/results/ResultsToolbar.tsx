@@ -1,5 +1,7 @@
 'use client'
 
+import { Button, Checkbox, Group, Loader } from '@mantine/core'
+
 type BatchProgress = {
   completed: number
   total: number
@@ -43,90 +45,59 @@ export function ResultsToolbar({
       : `Evaluate ${selectedCount} selected job${selectedCount === 1 ? '' : 's'}`
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border-divider)] flex-shrink-0">
-      {/* Paste URL */}
-      <button
-        type="button"
-        onClick={onFocusPaste}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors"
-      >
-        <span aria-hidden="true">+</span>
+    <Group gap={8} p="8px 12px" style={{ borderBottom: '1px solid var(--border-divider)', flexShrink: 0 }}>
+      <Button size="xs" color="brand" onClick={onFocusPaste} leftSection={<span aria-hidden="true">+</span>}>
         Paste URL
-      </button>
+      </Button>
 
-      {/* Scan portals */}
-      <button
-        type="button"
+      <Button
+        size="xs"
+        color="dark"
         onClick={onScan}
         disabled={isScanRunning}
         title={isScanRunning ? 'Scan in progress…' : 'Scan configured portals for new jobs'}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-[var(--foreground)] hover:bg-[var(--text-secondary)] disabled:bg-[var(--surface-disabled)] disabled:text-[var(--text-faint)] text-white rounded transition-colors disabled:cursor-not-allowed"
-      >
-        {isScanRunning ? (
-          <>
-            <Spinner />
-            Scanning…
-          </>
-        ) : (
-          <>
+        leftSection={
+          isScanRunning ? (
+            <Loader size={12} />
+          ) : (
             <span aria-hidden="true">🔍</span>
-            Scan
-          </>
-        )}
-      </button>
+          )
+        }
+      >
+        {isScanRunning ? 'Scanning…' : 'Scan'}
+      </Button>
 
-      {/* Evaluate selected */}
-      <button
-        type="button"
+      <Button
+        size="xs"
+        color="brand"
+        variant="filled"
         disabled={isEvalDisabled}
         title={evalTitle}
         onClick={isEvalDisabled ? undefined : onEvaluateSelected}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded transition-colors disabled:cursor-not-allowed disabled:text-[var(--text-faint)] disabled:bg-[var(--surface-disabled)] enabled:text-white enabled:bg-[var(--accent-dark)] enabled:hover:bg-[var(--accent)]"
+        leftSection={
+          isBatchRunning ? (
+            <Loader size={12} />
+          ) : (
+            <span aria-hidden="true">▶</span>
+          )
+        }
       >
-        {isBatchRunning ? <Spinner /> : <span aria-hidden="true">▶</span>}
         {evalLabel}
-      </button>
+      </Button>
 
-      {/* Generate resume (M9 stub) */}
-      <button
-        type="button"
-        disabled={selectedCount === 0}
-        title="Resume generation coming in M9"
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-[var(--text-faint)] bg-[var(--surface-disabled)] rounded disabled:cursor-not-allowed"
-      >
-        <span aria-hidden="true">📄</span>
+      <Button size="xs" variant="default" disabled={selectedCount === 0} title="Resume generation coming in M9" leftSection={<span aria-hidden="true">📄</span>}>
         Generate Resume
-      </button>
+      </Button>
 
-      <div className="ml-auto flex items-center gap-2">
-        <label className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={showArchived}
-            onChange={(e) => onToggleArchived(e.target.checked)}
-            className="rounded border-[var(--text-faint)] bg-white text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-offset-white"
-          />
-          Show archived
-        </label>
-      </div>
-    </div>
-  )
-}
-
-function Spinner() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="w-3 h-3 animate-spin shrink-0"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-      />
-    </svg>
+      <Group ml="auto" gap={8}>
+        <Checkbox
+          label="Show archived"
+          checked={showArchived}
+          onChange={(e) => onToggleArchived(e.currentTarget.checked)}
+          color="brand"
+          size="xs"
+        />
+      </Group>
+    </Group>
   )
 }
