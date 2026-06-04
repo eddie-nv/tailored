@@ -1,6 +1,7 @@
 'use client'
 
 import { memo } from 'react'
+import { Center, Divider, SimpleGrid, Stack, Text } from '@mantine/core'
 
 interface EvalReport {
   roleSummary?: string
@@ -18,17 +19,21 @@ interface ReportBlockProps {
 
 const ReportBlock = memo(function ReportBlock({ title, content }: ReportBlockProps) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <dt className="text-[11px] font-semibold uppercase tracking-widest text-[var(--text-muted)] leading-none">
+    <Stack gap={6}>
+      <Text component="dt" size="xs" fw={600} tt="uppercase" lts="0.1em" c="var(--text-muted)" lh={1}>
         {title}
-      </dt>
-      <div className="h-px bg-[var(--border-subtle)]" />
+      </Text>
+      <Divider />
       {content ? (
-        <dd className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap m-0">{content}</dd>
+        <Text component="dd" size="sm" c="var(--text-secondary)" lh={1.6} style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+          {content}
+        </Text>
       ) : (
-        <dd className="text-sm text-[var(--text-faint)] italic m-0">No data</dd>
+        <Text component="dd" size="sm" c="var(--text-faint)" fs="italic" style={{ margin: 0 }}>
+          No data
+        </Text>
       )}
-    </div>
+    </Stack>
   )
 })
 
@@ -41,9 +46,9 @@ export const EvalReportRenderer = memo(function EvalReportRenderer({
 }: EvalReportRendererProps) {
   if (!evalReport) {
     return (
-      <div className="flex items-center justify-center py-8 text-[var(--text-faint)] text-sm italic">
-        No evaluation report yet
-      </div>
+      <Center p="xl">
+        <Text c="var(--text-faint)" size="sm" fs="italic">No evaluation report yet</Text>
+      </Center>
     )
   }
 
@@ -52,29 +57,29 @@ export const EvalReportRenderer = memo(function EvalReportRenderer({
     report = JSON.parse(evalReport) as EvalReport
   } catch {
     return (
-      <div className="flex items-center justify-center py-8 text-[var(--text-faint)] text-sm italic">
-        Unable to parse evaluation report
-      </div>
+      <Center p="xl">
+        <Text c="var(--text-faint)" size="sm" fs="italic">Unable to parse evaluation report</Text>
+      </Center>
     )
   }
 
   const hasAnyContent = Object.values(report).some((v) => v && String(v).trim().length > 0)
   if (!hasAnyContent) {
     return (
-      <div className="flex items-center justify-center py-8 text-[var(--text-faint)] text-sm italic">
-        No evaluation report yet
-      </div>
+      <Center p="xl">
+        <Text c="var(--text-faint)" size="sm" fs="italic">No evaluation report yet</Text>
+      </Center>
     )
   }
 
   return (
-    <dl className="grid grid-cols-2 gap-x-8 gap-y-6">
+    <SimpleGrid component="dl" cols={2} spacing={32} verticalSpacing={24} style={{ margin: 0 }}>
       <ReportBlock title="Role Summary" content={report.roleSummary} />
       <ReportBlock title="CV Match" content={report.cvMatch} />
       <ReportBlock title="Level Strategy" content={report.levelStrategy} />
       <ReportBlock title="Compensation" content={report.compensation} />
       <ReportBlock title="Personalization" content={report.personalization} />
       <ReportBlock title="Interview Prep" content={report.interviewPrep} />
-    </dl>
+    </SimpleGrid>
   )
 })

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { Stack, NativeSelect, Center, Loader } from '@mantine/core'
 import { CollapsibleSection } from './CollapsibleSection'
 import { TagInput } from './TagInput'
 import { PortalManager } from './PortalManager'
@@ -40,9 +41,7 @@ export function DiscoverySection() {
   }, [])
 
   useEffect(() => {
-    return () => {
-      if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
-    }
+    return () => { if (savedTimerRef.current) clearTimeout(savedTimerRef.current) }
   }, [])
 
   const debouncedSave = useDebouncedCallback(async (data: DiscoveryForm) => {
@@ -82,14 +81,16 @@ export function DiscoverySection() {
   if (!form) {
     return (
       <CollapsibleSection title="Discovery">
-        <Spinner />
+        <Center h={128}>
+          <Loader size="sm" color="var(--text-faint)" />
+        </Center>
       </CollapsibleSection>
     )
   }
 
   return (
     <CollapsibleSection title="Discovery" saveStatus={saveStatus}>
-      <div className="space-y-6">
+      <Stack gap={24}>
         <PortalManager
           presetValue={form.portals}
           onPresetChange={(v) => handleChange('portals', v)}
@@ -109,36 +110,20 @@ export function DiscoverySection() {
           placeholder="e.g. LLMOps, Agentic, PM"
         />
 
-        <div>
-          <label
-            htmlFor="discovery-min-score"
-            className="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 mb-2"
-          >
-            Minimum Score
-          </label>
-          <select
-            id="discovery-min-score"
-            value={form.minScore}
-            onChange={(e) => handleChange('minScore', e.target.value as MinScore)}
-            className="px-3 py-2 text-sm border border-[var(--border)] rounded-[var(--radius-sm)] bg-white text-zinc-900 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]"
-          >
-            <option value="">Any score</option>
-            {(['A', 'B', 'C', 'D', 'F'] as const).map((score) => (
-              <option key={score} value={score}>
-                {score} or higher
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+        <NativeSelect
+          label="Minimum Score"
+          value={form.minScore}
+          onChange={(e) => handleChange('minScore', e.target.value as MinScore)}
+          data={[
+            { value: '', label: 'Any score' },
+            ...(['A', 'B', 'C', 'D', 'F'] as const).map((score) => ({
+              value: score,
+              label: `${score} or higher`,
+            })),
+          ]}
+          styles={{ label: { fontSize: '0.6875rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#a1a1aa', marginBottom: 8 } }}
+        />
+      </Stack>
     </CollapsibleSection>
-  )
-}
-
-function Spinner() {
-  return (
-    <div className="h-32 flex items-center justify-center">
-      <div className="w-4 h-4 rounded-full border-2 border-zinc-200 border-t-zinc-400 animate-spin" />
-    </div>
   )
 }

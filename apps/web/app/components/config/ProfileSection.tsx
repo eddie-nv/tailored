@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { Textarea, Stack, SimpleGrid, TextInput, Radio, Group, Center, Loader, Text } from '@mantine/core'
 import { CollapsibleSection } from './CollapsibleSection'
 import { TagInput } from './TagInput'
 import { useDebouncedCallback } from '../../hooks/useDebouncedCallback'
@@ -44,9 +45,7 @@ export function ProfileSection() {
   }, [])
 
   useEffect(() => {
-    return () => {
-      if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
-    }
+    return () => { if (savedTimerRef.current) clearTimeout(savedTimerRef.current) }
   }, [])
 
   const debouncedSave = useDebouncedCallback(async (data: ProfileForm) => {
@@ -88,30 +87,29 @@ export function ProfileSection() {
   if (!form) {
     return (
       <CollapsibleSection title="Profile">
-        <Spinner />
+        <Center h={128}>
+          <Loader size="sm" color="var(--text-faint)" />
+        </Center>
       </CollapsibleSection>
     )
   }
 
   return (
     <CollapsibleSection title="Profile" saveStatus={saveStatus}>
-      <div className="space-y-5">
-        <div>
-          <label
-            htmlFor="profile-cv"
-            className="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 mb-2"
-          >
-            CV / Resume
-          </label>
-          <textarea
-            id="profile-cv"
-            value={form.cv}
-            onChange={(e) => handleChange('cv', e.target.value)}
-            rows={8}
-            placeholder="Paste your CV in markdown format…"
-            className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded-[var(--radius-sm)] resize-y bg-white text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] font-mono leading-relaxed"
-          />
-        </div>
+      <Stack gap={20}>
+        <Textarea
+          label="CV / Resume"
+          value={form.cv}
+          onChange={(e) => handleChange('cv', e.target.value)}
+          rows={8}
+          placeholder="Paste your CV in markdown format…"
+          autosize
+          minRows={8}
+          styles={{
+            label: { fontSize: '0.6875rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#a1a1aa', marginBottom: 8 },
+            input: { fontFamily: 'var(--font-geist-mono), monospace', fontSize: '0.875rem', lineHeight: 1.6 },
+          }}
+        />
 
         <TagInput
           label="Target Roles"
@@ -120,108 +118,50 @@ export function ProfileSection() {
           placeholder="e.g. Staff Engineer, Engineering Manager"
         />
 
-        <div className="grid grid-cols-2 gap-4">
-          <SalaryField
-            id="profile-salary-min"
+        <SimpleGrid cols={2} spacing={16}>
+          <TextInput
             label="Salary Min"
+            type="number"
+            min={0}
             value={form.salaryMin}
-            onChange={(v) => handleChange('salaryMin', v)}
+            onChange={(e) => handleChange('salaryMin', e.target.value)}
             placeholder="80000"
+            leftSection={<Text size="sm" c="dimmed">$</Text>}
+            styles={{ label: { fontSize: '0.6875rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#a1a1aa', marginBottom: 8 } }}
           />
-          <SalaryField
-            id="profile-salary-max"
+          <TextInput
             label="Salary Max"
+            type="number"
+            min={0}
             value={form.salaryMax}
-            onChange={(v) => handleChange('salaryMax', v)}
+            onChange={(e) => handleChange('salaryMax', e.target.value)}
             placeholder="160000"
+            leftSection={<Text size="sm" c="dimmed">$</Text>}
+            styles={{ label: { fontSize: '0.6875rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#a1a1aa', marginBottom: 8 } }}
           />
-        </div>
+        </SimpleGrid>
 
-        <div>
-          <label
-            htmlFor="profile-location"
-            className="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 mb-2"
-          >
-            Location
-          </label>
-          <input
-            id="profile-location"
-            type="text"
-            value={form.location}
-            onChange={(e) => handleChange('location', e.target.value)}
-            placeholder="San Francisco, CA"
-            className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded-[var(--radius-sm)] bg-white text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]"
-          />
-        </div>
-
-        <fieldset>
-          <legend className="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 mb-2">
-            Work Type
-          </legend>
-          <div className="flex gap-5">
-            {(['remote', 'hybrid', 'onsite'] as const).map((type) => (
-              <label key={type} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="work-type"
-                  value={type}
-                  checked={form.workType === type}
-                  onChange={() => handleChange('workType', type)}
-                  className="accent-[var(--accent)]"
-                />
-                <span className="text-sm text-zinc-700 capitalize">{type}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-      </div>
-    </CollapsibleSection>
-  )
-}
-
-function SalaryField({
-  id,
-  label,
-  value,
-  onChange,
-  placeholder,
-}: {
-  id: string
-  label: string
-  value: string
-  onChange: (v: string) => void
-  placeholder: string
-}) {
-  return (
-    <div>
-      <label
-        htmlFor={id}
-        className="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 mb-2"
-      >
-        {label}
-      </label>
-      <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm select-none">
-          $
-        </span>
-        <input
-          id={id}
-          type="number"
-          min={0}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className="w-full pl-6 pr-3 py-2 text-sm border border-[var(--border)] rounded-[var(--radius-sm)] bg-white text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]"
+        <TextInput
+          label="Location"
+          value={form.location}
+          onChange={(e) => handleChange('location', e.target.value)}
+          placeholder="San Francisco, CA"
+          styles={{ label: { fontSize: '0.6875rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#a1a1aa', marginBottom: 8 } }}
         />
-      </div>
-    </div>
-  )
-}
 
-function Spinner() {
-  return (
-    <div className="h-32 flex items-center justify-center">
-      <div className="w-4 h-4 rounded-full border-2 border-zinc-200 border-t-zinc-400 animate-spin" />
-    </div>
+        <Radio.Group
+          label="Work Type"
+          value={form.workType}
+          onChange={(v) => handleChange('workType', v as WorkType)}
+          styles={{ label: { fontSize: '0.6875rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#a1a1aa', marginBottom: 8 } }}
+        >
+          <Group mt={8}>
+            <Radio value="remote" label="Remote" />
+            <Radio value="hybrid" label="Hybrid" />
+            <Radio value="onsite" label="Onsite" />
+          </Group>
+        </Radio.Group>
+      </Stack>
+    </CollapsibleSection>
   )
 }

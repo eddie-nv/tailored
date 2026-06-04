@@ -1,6 +1,7 @@
 'use client'
 
 import { memo, useState, useRef, useCallback, useEffect } from 'react'
+import { Stack, Group, Text, Anchor, Loader, UnstyledButton, Box } from '@mantine/core'
 import { createAgent } from '@/app/lib/createAgent'
 import { EventType } from '@ag-ui/core'
 import type { BaseEvent } from '@ag-ui/core'
@@ -82,24 +83,12 @@ export const ResumeCell = memo(function ResumeCell({
 
         if (e.type === EventType.STEP_STARTED) {
           const stepName = e['stepName'] as string
-          setSteps((prev) =>
-            prev.map((s) => ({
-              ...s,
-              status: s.name === stepName ? 'active' : s.status,
-            })),
-          )
+          setSteps((prev) => prev.map((s) => ({ ...s, status: s.name === stepName ? 'active' : s.status })))
         }
-
         if (e.type === EventType.STEP_FINISHED) {
           const stepName = e['stepName'] as string
-          setSteps((prev) =>
-            prev.map((s) => ({
-              ...s,
-              status: s.name === stepName ? 'done' : s.status,
-            })),
-          )
+          setSteps((prev) => prev.map((s) => ({ ...s, status: s.name === stepName ? 'done' : s.status })))
         }
-
         if (e.type === EventType.CUSTOM) {
           const name = e['name'] as string
           if (name === 'pdf-ready') {
@@ -109,7 +98,6 @@ export const ResumeCell = memo(function ResumeCell({
             setStatus('done')
           }
         }
-
         if (e.type === EventType.RUN_ERROR) {
           setStatus('error')
           setError((e['message'] as string) ?? 'Resume generation failed')
@@ -125,139 +113,103 @@ export const ResumeCell = memo(function ResumeCell({
   }, [jobId])
 
   if (!evaluated) {
-    return <span className="text-[var(--text-subtle)] text-xs select-none">—</span>
+    return <Text component="span" size="xs" c="var(--text-subtle)" style={{ userSelect: 'none' }}>—</Text>
   }
 
   if (status === 'running') {
     return (
-      <div
-        role="status"
-        aria-live="polite"
-        aria-label="Resume generation progress"
-        className="flex flex-col gap-0.5"
-      >
+      <Stack role="status" aria-live="polite" aria-label="Resume generation progress" gap={2}>
         <div ref={liveRef} className="sr-only" aria-live="polite" />
         {steps.map((step) => (
-          <div key={step.name} className="flex items-center gap-1.5">
+          <Group key={step.name} gap={6}>
             <StepDot status={step.status} />
-            <span
-              className={`text-xs truncate ${
+            <Text
+              component="span"
+              size="xs"
+              truncate
+              c={
                 step.status === 'active'
-                  ? 'text-[var(--accent)]'
+                  ? 'var(--accent)'
                   : step.status === 'done'
-                    ? 'text-[var(--text-faint)]'
-                    : 'text-[var(--text-subtle)]'
-              }`}
+                    ? 'var(--text-faint)'
+                    : 'var(--text-subtle)'
+              }
             >
               {STEP_LABELS[step.name]}
-            </span>
-          </div>
+            </Text>
+          </Group>
         ))}
-      </div>
+      </Stack>
     )
   }
 
   if (status === 'error') {
     return (
-      <div className="flex flex-col gap-0.5">
-        <span className="text-xs text-red-600 truncate">{error ?? 'Failed'}</span>
-        <button
-          type="button"
-          onClick={handleGenerate}
-          className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] underline text-left"
-        >
+      <Stack gap={2}>
+        <Text component="span" size="xs" c="#dc2626" truncate>{error ?? 'Failed'}</Text>
+        <UnstyledButton type="button" onClick={handleGenerate} className="text-action-btn" fz="xs" c="var(--accent)" style={{ textDecoration: 'underline' }}>
           Retry
-        </button>
-      </div>
+        </UnstyledButton>
+      </Stack>
     )
   }
 
   if (downloadUrl) {
     return (
-      <a
+      <Anchor
         href={downloadUrl}
         target="_blank"
         rel="noopener noreferrer"
         aria-label={`Download resume${filename ? `: ${filename}` : ''}`}
-        className="inline-flex items-center gap-1 text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors"
+        className="download-link"
       >
         <DownloadIcon />
         Resume
-      </a>
+      </Anchor>
     )
   }
 
   return (
-    <button
+    <UnstyledButton
       type="button"
       onClick={handleGenerate}
       aria-label="Generate resume"
-      className="text-xs text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors"
+      className="text-action-btn"
+      c="var(--text-muted)"
     >
       Generate
-    </button>
+    </UnstyledButton>
   )
 })
 
 function StepDot({ status }: { status: StepStatus }) {
   if (status === 'done') {
     return (
-      <svg
-        aria-hidden="true"
-        className="w-3 h-3 text-emerald-500 shrink-0"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={3}
-      >
+      <svg aria-hidden="true" style={{ width: 12, height: 12, color: '#10b981', flexShrink: 0 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
       </svg>
     )
   }
   if (status === 'active') {
-    return (
-      <svg
-        aria-hidden="true"
-        className="w-3 h-3 animate-spin text-[var(--accent)] shrink-0"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-        />
-      </svg>
-    )
+    return <Loader size={12} color="var(--accent)" style={{ flexShrink: 0 }} />
   }
   return (
-    <span aria-hidden="true" className="w-3 h-3 rounded-full border border-[var(--border-subtle)] shrink-0 inline-block" />
+    <Box
+      component="span"
+      aria-hidden="true"
+      display="inline-block"
+      w={12}
+      h={12}
+      bd="1px solid var(--border-subtle)"
+      style={{ borderRadius: '50%', flexShrink: 0 }}
+    />
   )
 }
 
 function DownloadIcon() {
   return (
-    <svg
-      aria-hidden="true"
-      className="w-3.5 h-3.5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"
-      />
+    <svg aria-hidden="true" style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
     </svg>
   )
 }

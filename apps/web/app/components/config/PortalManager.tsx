@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { Stack, Text, Center, Loader } from '@mantine/core'
 import { PresetPortals } from './PresetPortals'
 import { CustomPortalList } from './CustomPortalList'
 import { AddPortalForm } from './AddPortalForm'
@@ -41,9 +42,7 @@ export function PortalManager({ presetValue, onPresetChange }: Props) {
   }, [])
 
   const handleToggle = useCallback(async (id: string, enabled: boolean) => {
-    setCustomPortals((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, enabled } : p)),
-    )
+    setCustomPortals((prev) => prev.map((p) => (p.id === id ? { ...p, enabled } : p)))
     await fetch(`/api/config/portals/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -57,33 +56,25 @@ export function PortalManager({ presetValue, onPresetChange }: Props) {
   }, [])
 
   return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-3">
-          Job Boards
-        </p>
+    <Stack gap={24}>
+      <Stack gap={12}>
+        <Text size="xs" fw={600} tt="uppercase" lts="0.1em" c="#71717a">Job Boards</Text>
         <PresetPortals value={presetValue} onChange={onPresetChange} />
-      </div>
+      </Stack>
 
-      <div>
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-3">
-          Company Career Pages
-        </p>
+      <Stack gap={12}>
+        <Text size="xs" fw={600} tt="uppercase" lts="0.1em" c="#71717a">Company Career Pages</Text>
         {loading ? (
-          <div className="h-8 flex items-center">
-            <div className="w-3 h-3 rounded-full border-2 border-zinc-200 border-t-zinc-400 animate-spin" />
-          </div>
+          <Center h={32}>
+            <Loader size="xs" color="var(--text-faint)" />
+          </Center>
         ) : (
-          <div className="space-y-3">
-            <CustomPortalList
-              portals={customPortals}
-              onToggle={handleToggle}
-              onDelete={handleDelete}
-            />
+          <Stack gap={12}>
+            <CustomPortalList portals={customPortals} onToggle={handleToggle} onDelete={handleDelete} />
             <AddPortalForm onAdd={handleAdd} />
-          </div>
+          </Stack>
         )}
-      </div>
-    </div>
+      </Stack>
+    </Stack>
   )
 }

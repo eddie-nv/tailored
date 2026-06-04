@@ -2,6 +2,7 @@
 
 import { memo } from 'react'
 import { useRouter } from 'next/navigation'
+import { Box, Stack, Text } from '@mantine/core'
 import type { GeneratedResume } from '@tailored/db'
 
 interface ResumeHistoryProps {
@@ -19,39 +20,34 @@ export const ResumeHistory = memo(function ResumeHistory({ resumes }: ResumeHist
   )
 
   return (
-    <div className="flex flex-col gap-1">
-      <h4 className="text-[11px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-1">
+    <Stack gap={4}>
+      <Text component="h4" size="xs" fw={600} tt="uppercase" lts="0.1em" c="var(--text-muted)" mb={4} style={{ margin: '0 0 4px' }}>
         Resume History
-      </h4>
-      <ul role="list" className="flex flex-col gap-0.5">
+      </Text>
+      <Stack component="ul" role="list" gap={2} style={{ margin: 0, padding: 0, listStyle: 'none' }}>
         {sorted.map((resume, index) => (
-          <li key={resume.id}>
+          <Box component="li" key={resume.id}>
             <button
               type="button"
               onClick={() => router.push(`/resumes/${resume.id}`)}
-              className="
-                w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-left text-xs
-                text-[var(--text-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)]
-                focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/60
-                transition-colors
-              "
+              className="resume-history-btn"
             >
-              <span className="font-semibold text-[var(--foreground)] shrink-0">
+              <Text component="span" fw={600} c="var(--foreground)" style={{ flexShrink: 0 }}>
                 Version {index + 1}
-              </span>
-              <span className="text-[var(--text-faint)]" aria-hidden="true">—</span>
-              <span className="truncate">{resume.filename}</span>
-              <span className="shrink-0 text-[var(--text-faint)] ml-auto">
+              </Text>
+              <Text component="span" c="var(--text-faint)" aria-hidden="true">—</Text>
+              <Text component="span" truncate>{resume.filename}</Text>
+              <Text component="span" c="var(--text-faint)" ml="auto" style={{ flexShrink: 0 }}>
                 {new Date(resume.createdAt).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',
                 })}
-              </span>
+              </Text>
             </button>
-          </li>
+          </Box>
         ))}
-      </ul>
-    </div>
+      </Stack>
+    </Stack>
   )
 })

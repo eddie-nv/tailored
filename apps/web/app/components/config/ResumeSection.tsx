@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { Stack, Radio, Paper, Text, TextInput, Textarea, Center, Loader } from '@mantine/core'
 import { CollapsibleSection } from './CollapsibleSection'
 import { TagInput } from './TagInput'
 import { SectionOrderList } from './SectionOrderList'
@@ -18,18 +19,22 @@ type ResumeForm = {
 }
 
 const DEFAULT_SECTION_ORDER = [
-  'summary',
-  'experience',
-  'skills',
-  'education',
-  'projects',
-  'certifications',
+  'summary', 'experience', 'skills', 'education', 'projects', 'certifications',
 ]
 
 const TEMPLATE_DESCRIPTIONS: Record<Template, string> = {
   default: 'Balanced layout with clear section headers',
   minimal: 'Clean single-column, less visual weight',
   dense: 'Compact 2-column, maximum content per page',
+}
+
+const FIELD_LABEL_STYLES = {
+  fontSize: '0.6875rem',
+  fontWeight: 500,
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.1em',
+  color: '#a1a1aa',
+  marginBottom: 8,
 }
 
 function parseResume(raw: Record<string, unknown> | null): ResumeForm {
@@ -56,9 +61,7 @@ export function ResumeSection() {
   }, [])
 
   useEffect(() => {
-    return () => {
-      if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
-    }
+    return () => { if (savedTimerRef.current) clearTimeout(savedTimerRef.current) }
   }, [])
 
   const debouncedSave = useDebouncedCallback(async (data: ResumeForm) => {
@@ -98,76 +101,61 @@ export function ResumeSection() {
   if (!form) {
     return (
       <CollapsibleSection title="Resume">
-        <Spinner />
+        <Center h={128}>
+          <Loader size="sm" color="var(--text-faint)" />
+        </Center>
       </CollapsibleSection>
     )
   }
 
   return (
     <CollapsibleSection title="Resume" saveStatus={saveStatus}>
-      <div className="space-y-6">
-        <fieldset>
-          <legend className="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 mb-3">
-            Template
-          </legend>
-          <div className="space-y-2">
+      <Stack gap={24}>
+        <Radio.Group
+          label="Template"
+          value={form.template}
+          onChange={(v) => handleChange('template', v as Template)}
+          styles={{ label: FIELD_LABEL_STYLES }}
+        >
+          <Stack gap="xs" mt={8}>
             {(['default', 'minimal', 'dense'] as const).map((t) => (
-              /* eslint-disable-next-line jsx-a11y/label-has-associated-control --
-                 rule can't resolve JSX expression {t} as label text at lint time;
-                 htmlFor+id wiring is present and the label renders visible text */
-              <label
+              <Paper
                 key={t}
-                htmlFor={`resume-template-${t}`}
-                className={`flex items-start gap-3 px-3 py-2.5 rounded-[var(--radius-sm)] border cursor-pointer transition-all ${
-                  form.template === t
-                    ? 'border-[var(--accent)] bg-blue-50/50'
-                    : 'border-[var(--border)] hover:border-zinc-300 bg-white'
-                }`}
+                withBorder
+                p="sm"
+                className="template-card"
+                data-selected={form.template === t ? 'true' : undefined}
+                style={{ cursor: 'pointer' }}
               >
-                <input
-                  id={`resume-template-${t}`}
-                  type="radio"
-                  name="resume-template"
+                <Radio
                   value={t}
-                  checked={form.template === t}
-                  onChange={() => handleChange('template', t)}
-                  className="mt-0.5 accent-[var(--accent)]"
+                  label={
+                    <Stack gap={2}>
+                      <Text size="sm" fw={500} tt="capitalize">{t}</Text>
+                      <Text size="xs" c="dimmed">{TEMPLATE_DESCRIPTIONS[t]}</Text>
+                    </Stack>
+                  }
                 />
-                <span className="flex flex-col">
-                  <span className="text-sm font-medium text-zinc-900 capitalize">{t}</span>
-                  <span className="text-xs text-zinc-400 mt-0.5">{TEMPLATE_DESCRIPTIONS[t]}</span>
-                </span>
-              </label>
+              </Paper>
             ))}
-          </div>
-        </fieldset>
+          </Stack>
+        </Radio.Group>
 
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-widest text-zinc-400 mb-3">
-            Section Order
-          </p>
+          <Text size="xs" fw={500} tt="uppercase" lts="0.1em" c="#a1a1aa" mb={8}>Section Order</Text>
           <SectionOrderList
             sections={form.sectionOrder}
             onChange={(v) => handleChange('sectionOrder', v)}
           />
         </div>
 
-        <div>
-          <label
-            htmlFor="resume-tone"
-            className="block text-[11px] font-medium uppercase tracking-widest text-zinc-400 mb-2"
-          >
-            Tone
-          </label>
-          <input
-            id="resume-tone"
-            type="text"
-            value={form.tone}
-            onChange={(e) => handleChange('tone', e.target.value)}
-            placeholder="e.g. concise, technical, results-oriented"
-            className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded-[var(--radius-sm)] bg-white text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]"
-          />
-        </div>
+        <TextInput
+          label="Tone"
+          value={form.tone}
+          onChange={(e) => handleChange('tone', e.target.value)}
+          placeholder="e.g. concise, technical, results-oriented"
+          styles={{ label: FIELD_LABEL_STYLES }}
+        />
 
         <TagInput
           label="Emphasis Keywords"
@@ -175,15 +163,7 @@ export function ResumeSection() {
           onChange={(v) => handleChange('keywords', v)}
           placeholder="e.g. distributed systems, team leadership"
         />
-      </div>
+      </Stack>
     </CollapsibleSection>
-  )
-}
-
-function Spinner() {
-  return (
-    <div className="h-32 flex items-center justify-center">
-      <div className="w-4 h-4 rounded-full border-2 border-zinc-200 border-t-zinc-400 animate-spin" />
-    </div>
   )
 }

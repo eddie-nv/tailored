@@ -1,5 +1,6 @@
 'use client'
 
+import { Box, Group, Loader, Paper, Text } from '@mantine/core'
 import type { EvalStep } from '@/app/hooks/useEvaluation'
 
 const STEP_LABELS: Record<string, string> = {
@@ -19,110 +20,106 @@ interface EvalProgressPanelProps {
 
 export function EvalProgressPanel({ steps, streamedText, status, error }: EvalProgressPanelProps) {
   return (
-    <div
+    <Paper
       role="status"
       aria-live="polite"
       aria-label="Evaluation progress"
-      className="mx-3 mb-3 rounded border border-[var(--border-subtle)] bg-white text-sm overflow-hidden shadow-sm"
+      withBorder
+      radius={8}
+      bg="white"
+      shadow="xs"
+      style={{ overflow: 'hidden', margin: '0 12px 12px' }}
     >
       {status === 'creating-job' && (
-        <div className="px-4 py-3 text-[var(--text-muted)] flex items-center gap-2">
-          <Spinner />
-          <span>Creating job record…</span>
-        </div>
+        <Group p="12px 16px" c="var(--text-muted)" gap={8}>
+          <Loader size={14} />
+          <Text size="sm">Creating job record…</Text>
+        </Group>
       )}
 
       {(status === 'evaluating' || status === 'done') && (
-        <div className="divide-y divide-[var(--border-divider)]">
+        <div>
           {steps.map((step) => (
-            <div key={step.name} className="flex items-center gap-3 px-4 py-2.5">
+            <Group
+              key={step.name}
+              gap={12}
+              p="10px 16px"
+              style={{ borderBottom: '1px solid var(--border-divider)' }}
+            >
               <StepIcon status={step.status} />
-              <span
-                className={
+              <Text
+                size="sm"
+                c={
                   step.status === 'active'
-                    ? 'text-[var(--foreground)] font-medium'
+                    ? 'var(--foreground)'
                     : step.status === 'done'
-                      ? 'text-[var(--text-muted)]'
-                      : 'text-[var(--text-subtle)]'
+                      ? 'var(--text-muted)'
+                      : 'var(--text-subtle)'
                 }
+                fw={step.status === 'active' ? 500 : 400}
               >
                 {STEP_LABELS[step.name] ?? step.name}
-              </span>
-              {step.status === 'active' && <Spinner className="ml-auto" />}
+              </Text>
+              {step.status === 'active' && <Loader size={14} color="var(--accent)" ml="auto" />}
               {step.status === 'done' && (
-                <span className="ml-auto text-emerald-500 text-xs">Done</span>
+                <Text component="span" size="xs" c="#10b981" ml="auto">Done</Text>
               )}
-            </div>
+            </Group>
           ))}
         </div>
       )}
 
       {streamedText && (
-        <div className="px-4 py-3 border-t border-[var(--border-divider)]">
-          <p className="text-xs text-[var(--text-faint)] mb-1.5 font-medium uppercase tracking-wide">
+        <Box p="12px 16px" style={{ borderTop: '1px solid var(--border-divider)' }}>
+          <Text size="xs" c="var(--text-faint)" fw={500} tt="uppercase" lts="0.05em" mb={6}>
             Evaluation Report
-          </p>
-          <div className="text-[var(--text-secondary)] text-xs leading-relaxed max-h-40 overflow-y-auto whitespace-pre-wrap">
+          </Text>
+          <Text size="xs" c="var(--text-secondary)" lh={1.6} style={{ maxHeight: 160, overflowY: 'auto', whiteSpace: 'pre-wrap' }}>
             {streamedText}
-          </div>
-        </div>
+          </Text>
+        </Box>
       )}
 
       {status === 'error' && error && (
-        <div className="px-4 py-3 text-red-600 flex items-start gap-2">
-          <span className="shrink-0">✕</span>
-          <span>{error}</span>
-        </div>
+        <Group p="12px 16px" c="#dc2626" align="flex-start" gap={8}>
+          <span style={{ flexShrink: 0 }}>✕</span>
+          <Text size="sm">{error}</Text>
+        </Group>
       )}
-    </div>
+    </Paper>
   )
 }
 
 function StepIcon({ status }: { status: EvalStep['status'] }) {
   if (status === 'done') {
     return (
-      <svg
-        aria-hidden="true"
-        className="w-4 h-4 text-emerald-500 shrink-0"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2.5}
-      >
+      <svg aria-hidden="true" style={{ width: 16, height: 16, color: '#10b981', flexShrink: 0 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
       </svg>
     )
   }
   if (status === 'active') {
     return (
-      <span
+      <Box
+        component="span"
         aria-hidden="true"
-        className="w-4 h-4 rounded-full border-2 border-[var(--accent)] shrink-0"
+        display="inline-block"
+        w={16}
+        h={16}
+        bd="2px solid var(--accent)"
+        style={{ borderRadius: '50%', flexShrink: 0 }}
       />
     )
   }
   return (
-    <span
+    <Box
+      component="span"
       aria-hidden="true"
-      className="w-4 h-4 rounded-full border-2 border-[var(--border-subtle)] shrink-0"
+      display="inline-block"
+      w={16}
+      h={16}
+      bd="2px solid var(--border-subtle)"
+      style={{ borderRadius: '50%', flexShrink: 0 }}
     />
-  )
-}
-
-function Spinner({ className = '' }: { className?: string }) {
-  return (
-    <svg
-      aria-hidden="true"
-      className={`w-3.5 h-3.5 animate-spin text-[var(--accent)] ${className}`}
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-      />
-    </svg>
   )
 }

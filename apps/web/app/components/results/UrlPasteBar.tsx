@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useImperativeHandle, type FormEvent } from 'react'
+import { Button, Group, TextInput } from '@mantine/core'
 
 export interface UrlPasteBarHandle {
   focus: () => void
@@ -29,25 +30,31 @@ export function UrlPasteBar({ onSubmit, isLoading, ref }: UrlPasteBarProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 p-3 border-b border-[var(--border-divider)] flex-shrink-0">
-      <input
+    <Group
+      component="form"
+      gap={8}
+      p={12}
+      onSubmit={handleSubmit}
+      style={{ borderBottom: '1px solid var(--border-divider)', flexShrink: 0 }}
+    >
+      <TextInput
         ref={inputRef}
-        type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Paste a job URL or description to evaluate…"
         disabled={isLoading}
         aria-label="Job URL or description"
-        className="flex-1 bg-[var(--surface-sunken)] text-[var(--foreground)] placeholder:text-[var(--text-faint)] rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)] disabled:opacity-50"
+        style={{ flex: 1 }}
+        size="sm"
       />
-      <button
+      <Button
         type="submit"
         disabled={!value.trim() || isLoading}
-        aria-label="Evaluate job"
-        className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] disabled:bg-[var(--surface-disabled)] disabled:text-[var(--text-faint)] text-white text-sm font-medium rounded transition-colors"
+        color="brand"
+        size="sm"
       >
         {isLoading ? 'Evaluating…' : 'Evaluate'}
-      </button>
-    </form>
+      </Button>
+    </Group>
   )
 }

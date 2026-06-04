@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react'
 import type { DragEvent } from 'react'
+import { Stack, Text } from '@mantine/core'
 
 type Props = {
   sections: string[]
@@ -61,12 +62,10 @@ export function SectionOrderList({ sections, onChange }: Props) {
         setOverIndex(null)
         return
       }
-
       const reordered = [...sections]
       const [item] = reordered.splice(from, 1)
       reordered.splice(index, 0, item)
       onChange(reordered)
-
       dragItem.current = null
       setDragIndex(null)
       setOverIndex(null)
@@ -82,49 +81,45 @@ export function SectionOrderList({ sections, onChange }: Props) {
 
   return (
     <>
-    <div className="space-y-1.5" role="list" aria-label="Resume section order">
-      {sections.map((section, index) => (
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- tabIndex+onKeyDown make this interactive; rule doesn't recognise listitem+tabIndex combo
-        <div
-          key={section}
-          role="listitem"
-          tabIndex={0}
-          aria-label={`${SECTION_LABELS[section] ?? section}, position ${index + 1} of ${sections.length}`}
-          draggable
-          onDragStart={(e) => handleDragStart(e, index)}
-          onDragOver={(e) => handleDragOver(e, index)}
-          onDrop={() => handleDrop(index)}
-          onDragEnd={handleDragEnd}
-          onKeyDown={(e) => handleKeyDown(e, index)}
-          className={`flex items-center gap-3 px-3 py-2 rounded-[var(--radius-sm)] border text-sm cursor-grab select-none transition-all ${
-            dragIndex === index
-              ? 'opacity-40 border-[var(--border)]'
-              : overIndex === index
-                ? 'border-[var(--accent)] bg-blue-50'
-                : 'border-[var(--border)] bg-white hover:border-zinc-300'
-          }`}
-        >
-          <svg
-            className="w-3.5 h-3.5 text-[var(--text-subtle)] shrink-0"
-            fill="currentColor"
-            viewBox="0 0 16 16"
-            aria-hidden="true"
+      <Stack gap={6} role="list" aria-label="Resume section order">
+        {sections.map((section, index) => (
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+          <div
+            key={section}
+            role="listitem"
+            tabIndex={0}
+            aria-label={`${SECTION_LABELS[section] ?? section}, position ${index + 1} of ${sections.length}`}
+            draggable
+            onDragStart={(e) => handleDragStart(e, index)}
+            onDragOver={(e) => handleDragOver(e, index)}
+            onDrop={() => handleDrop(index)}
+            onDragEnd={handleDragEnd}
+            onKeyDown={(e) => handleKeyDown(e, index)}
+            className="section-drag-item"
+            data-dragging={dragIndex === index ? 'true' : undefined}
+            data-over={overIndex === index ? 'true' : undefined}
           >
-            <circle cx="4" cy="4" r="1.2" />
-            <circle cx="4" cy="8" r="1.2" />
-            <circle cx="4" cy="12" r="1.2" />
-            <circle cx="9" cy="4" r="1.2" />
-            <circle cx="9" cy="8" r="1.2" />
-            <circle cx="9" cy="12" r="1.2" />
-          </svg>
-          <span className="text-zinc-700">{SECTION_LABELS[section] ?? section}</span>
-          <span className="ml-auto text-[10px] text-[var(--text-subtle)] font-mono tabular-nums">
-            {index + 1}
-          </span>
-        </div>
-      ))}
-    </div>
-    <div ref={liveRef} role="status" aria-live="polite" className="sr-only" />
+            <svg
+              style={{ width: 14, height: 14, color: 'var(--text-subtle)', flexShrink: 0 }}
+              fill="currentColor"
+              viewBox="0 0 16 16"
+              aria-hidden="true"
+            >
+              <circle cx="4" cy="4" r="1.2" />
+              <circle cx="4" cy="8" r="1.2" />
+              <circle cx="4" cy="12" r="1.2" />
+              <circle cx="9" cy="4" r="1.2" />
+              <circle cx="9" cy="8" r="1.2" />
+              <circle cx="9" cy="12" r="1.2" />
+            </svg>
+            <Text span c="#3f3f46">{SECTION_LABELS[section] ?? section}</Text>
+            <Text component="span" fz={10} c="var(--text-subtle)" ff="monospace" ml="auto" style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {index + 1}
+            </Text>
+          </div>
+        ))}
+      </Stack>
+      <div ref={liveRef} role="status" aria-live="polite" className="sr-only" />
     </>
   )
 }
