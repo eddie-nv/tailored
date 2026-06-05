@@ -30,6 +30,12 @@ const PatchSchema = z.object({
   timezone: z.string().max(100).nullable().optional(),
   visaStatus: z.string().max(200).nullable().optional(),
   onsiteAvailability: z.string().max(200).nullable().optional(),
+  // target roles archetypes
+  archetypes: z.array(z.object({
+    name: z.string().max(200),
+    level: z.string().max(100),
+    fit: z.enum(['primary', 'secondary', 'adjacent']),
+  })).nullable().optional(),
   // proof points
   proofPoints: z.array(z.object({
     name: z.string().max(200),
@@ -55,6 +61,7 @@ export async function GET() {
         targetRoles: JSON.parse(profile.targetRoles ?? '[]'),
         scoringWeights: JSON.parse(profile.scoringWeights ?? '{}'),
         superpowers: profile.superpowers ? JSON.parse(profile.superpowers) : null,
+        archetypes: profile.archetypes ? JSON.parse(profile.archetypes) : null,
         proofPoints: profile.proofPoints ? JSON.parse(profile.proofPoints) : null,
       },
     })
@@ -105,6 +112,8 @@ export async function PATCH(req: Request) {
   if (data.timezone !== undefined) updateData.timezone = data.timezone
   if (data.visaStatus !== undefined) updateData.visaStatus = data.visaStatus
   if (data.onsiteAvailability !== undefined) updateData.onsiteAvailability = data.onsiteAvailability
+  // target roles archetypes
+  if (data.archetypes !== undefined) updateData.archetypes = data.archetypes === null ? null : JSON.stringify(data.archetypes)
   // proof points
   if (data.proofPoints !== undefined) updateData.proofPoints = data.proofPoints === null ? null : JSON.stringify(data.proofPoints)
   // cv output
@@ -132,6 +141,7 @@ export async function PATCH(req: Request) {
         targetRoles: JSON.parse(profile.targetRoles ?? '[]'),
         scoringWeights: JSON.parse(profile.scoringWeights ?? '{}'),
         superpowers: profile.superpowers ? JSON.parse(profile.superpowers) : null,
+        archetypes: profile.archetypes ? JSON.parse(profile.archetypes) : null,
         proofPoints: profile.proofPoints ? JSON.parse(profile.proofPoints) : null,
       },
     })
