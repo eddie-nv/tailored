@@ -129,14 +129,12 @@ Respond in JSON only: {"archetype": "...", "company": "...", "role": "..."}`,
     // ── Step 2: Scoring ──────────────────────────────────────────────────────
     yield stepStarted('scoring')
 
-    type RoleTarget = { title: string; priority: string; seniority: string }
+    type RoleTarget = { title: string; priority: string; seniority: string; pitchWhen?: string }
     const roleTargets = profile?.roleTargets
       ? safeParseJson<RoleTarget[]>(profile.roleTargets, [])
       : []
-    const targetRoles = roleTargets.length
-      ? roleTargets.filter((r) => r.priority === 'primary').map((r) => r.title).join(', ') ||
-        roleTargets.map((r) => r.title).join(', ')
-      : 'not specified'
+    const roleContext = buildRoleContext(roleTargets)
+    const pitchWhenGuidance = buildPitchWhenGuidance(roleTargets)
     const location = profile?.location ?? 'not specified'
     const workType = profile?.workType ?? 'not specified'
     const salaryMin = profile?.salaryMin ?? null
@@ -165,12 +163,13 @@ Respond JSON only: {"scores": {"role_seniority_alignment": 8, ...}, "total": 73,
           {
             role: 'user',
             content: `Candidate profile:
-- Target roles: ${targetRoles}
+- Target roles:
+${roleContext}
 - Location preference: ${location}
 - Work type: ${workType}
 - Salary range: ${salaryMin && salaryMax ? `$${salaryMin.toLocaleString()}–$${salaryMax.toLocaleString()}` : 'not specified'}
 - Archetype: ${archetype}
-
+${pitchWhenGuidance ? `\nRole framing guidance (use when scoring role_seniority_alignment):\n${pitchWhenGuidance}` : ''}
 Scoring weights (overrides if set): ${JSON.stringify(scoringWeights)}
 
 Job description:
@@ -304,7 +303,8 @@ Keep each block tight. Be direct. No filler.`,
             content: `Evaluate this job for me.
 
 Profile:
-- Target roles: ${targetRoles}
+- Target roles:
+${roleContext}
 - CV excerpt: ${cv.slice(0, 2000)}
 
 Job: ${role} at ${company} (${archetype})
@@ -402,6 +402,30 @@ ${jd.slice(0, 5000)}`,
       ],
     }
   }
+}
+
+type RoleTargetForContext = { title: string; priority: string; seniority: string; pitchWhen?: string }
+
+function buildRoleContext(roleTargets: RoleTargetForContext[]): string {
+  if (roleTargets.length === 0) return '  not specified'
+  const formatGroup = (roles: RoleTargetForContext[]) =>
+    roles.map((r) => (r.seniority ? `${r.title} (${r.seniority})` : r.title)).join(', ')
+  const primary = roleTargets.filter((r) => r.priority === 'primary')
+  const backup = roleTargets.filter((r) => r.priority === 'backup')
+  const stretch = roleTargets.filter((r) => r.priority === 'stretch')
+  const lines: string[] = []
+  if (primary.length) lines.push(`  Primary roles: ${formatGroup(primary)}`)
+  if (backup.length) lines.push(`  Backup roles: ${formatGroup(backup)}`)
+  if (stretch.length) lines.push(`  Stretch roles: ${formatGroup(stretch)}`)
+  return lines.join('\n')
+}
+
+function buildPitchWhenGuidance(roleTargets: RoleTargetForContext[]): string {
+  const relevant = roleTargets.filter((r) => r.priority === 'primary' && r.pitchWhen?.trim())
+  if (relevant.length === 0) return ''
+  return relevant
+    .map((r) => `- "${r.title}": pitch this role when the JD emphasizes — ${r.pitchWhen}`)
+    .join('\n')
 }
 
 function safeParseJson<T>(value: string, fallback: T): T {
