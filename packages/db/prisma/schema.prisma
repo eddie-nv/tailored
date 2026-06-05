@@ -46,6 +46,9 @@ model Profile {
   // Proof points
   proofPoints      String?   // JSON array: [{name, url, heroMetric}]
 
+  // Target roles — profile archetypes (distinct from DiscoveryPrefs.archetypes)
+  archetypes       String?   // JSON array: [{name, level, fit}]
+
   // CV output
   cvFormat         String?   // "html"|"latex"
   canvaDesignId    String?
