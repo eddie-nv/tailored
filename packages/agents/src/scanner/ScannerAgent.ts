@@ -47,6 +47,40 @@ function matchesKeywords(title: string, keywords: string[]): boolean {
   return keywords.some((kw) => lower.includes(kw.toLowerCase()))
 }
 
+type StoredTitleFilter = {
+  derived: string[]
+  custom: string[]
+  negative: string[]
+  seniorityBoost: string[]
+}
+
+function parseTitleFilter(raw: string | null): StoredTitleFilter {
+  if (!raw) return { derived: [], custom: [], negative: [], seniorityBoost: [] }
+  try {
+    const parsed = JSON.parse(raw) as StoredTitleFilter
+    return {
+      derived: Array.isArray(parsed.derived) ? parsed.derived : [],
+      custom: Array.isArray(parsed.custom) ? parsed.custom : [],
+      negative: Array.isArray(parsed.negative) ? parsed.negative : [],
+      seniorityBoost: Array.isArray(parsed.seniorityBoost) ? parsed.seniorityBoost : [],
+    }
+  } catch {
+    return { derived: [], custom: [], negative: [], seniorityBoost: [] }
+  }
+}
+
+function matchesTitleFilter(title: string, positive: string[], negative: string[]): boolean {
+  const lower = title.toLowerCase()
+  if (negative.some((kw) => lower.includes(kw.toLowerCase()))) return false
+  if (positive.length === 0) return true
+  return positive.some((kw) => lower.includes(kw.toLowerCase()))
+}
+
+function isSeniorityBoosted(title: string, seniorityBoost: string[]): boolean {
+  const lower = title.toLowerCase()
+  return seniorityBoost.some((prefix) => lower.startsWith(prefix.toLowerCase()))
+}
+
 // ── Platform Fetchers ─────────────────────────────────────────────────────────
 
 interface AshbyPosting {
@@ -146,10 +180,12 @@ async function scanPlatformBatch(
   batch: PlatformBatch,
   existingUrls: Set<string>,
   keywords: string[],
+  titleFilter: StoredTitleFilter,
   signal: AbortSignal,
 ): Promise<ScannedJob[]> {
   const platformName = batch.platformName.toLowerCase()
   const collected: ScannedJob[] = []
+  const positive = [...titleFilter.derived, ...titleFilter.custom]
 
   for (const { slug } of batch.portals) {
     if (signal.aborted) break
@@ -170,7 +206,10 @@ async function scanPlatformBatch(
     }
 
     const filtered = jobs.filter(
-      (j) => matchesKeywords(j.role, keywords) && !existingUrls.has(j.url),
+      (j) =>
+        matchesKeywords(j.role, keywords) &&
+        matchesTitleFilter(j.role, positive, titleFilter.negative) &&
+        !existingUrls.has(j.url),
     )
 
     for (const job of filtered) {
@@ -239,6 +278,8 @@ export class ScannerAgent extends BaseAgent {
       ? safeParseJson<string[]>(discoveryPrefs.keywords, [])
       : []
 
+    const titleFilter = parseTitleFilter(discoveryPrefs?.titleFilter ?? null)
+
     const rawCustomPortals = await prisma.customPortal.findMany({ where: { enabled: true } })
     const { scannable: customBatches, skipped: skippedPortals } = buildCustomBatches(rawCustomPortals)
 
@@ -264,7 +305,7 @@ export class ScannerAgent extends BaseAgent {
 
       yield stepStarted(`scanning-${batch.platformName}`)
 
-      const found = await scanPlatformBatch(batch, existingUrls, keywords, signal)
+      const found = await scanPlatformBatch(batch, existingUrls, keywords, titleFilter, signal)
       allNewJobs.push(...found)
       done += 1
 
@@ -276,6 +317,13 @@ export class ScannerAgent extends BaseAgent {
 
       yield stepFinished(`scanning-${batch.platformName}`)
     }
+
+    // Sort seniority-boosted jobs first so they appear at the top of the results
+    allNewJobs.sort((a, b) => {
+      const aBoost = isSeniorityBoosted(a.role, titleFilter.seniorityBoost) ? 0 : 1
+      const bBoost = isSeniorityBoosted(b.role, titleFilter.seniorityBoost) ? 0 : 1
+      return aBoost - bBoost
+    })
 
     // DB write in one shot
     const jobsToInsert = allNewJobs.map((j) => ({
