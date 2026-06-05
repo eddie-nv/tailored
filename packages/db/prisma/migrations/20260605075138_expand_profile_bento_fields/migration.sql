@@ -1,0 +1,21 @@
+-- AlterTable
+ALTER TABLE "Profile" ADD COLUMN "autoPdfThreshold" REAL;
+ALTER TABLE "Profile" ADD COLUMN "canvaDesignId" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "currency" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "cvFormat" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "email" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "exitStory" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "fullName" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "github" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "headline" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "linkedin" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "locationFlexibility" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "onsiteAvailability" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "phone" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "portfolioUrl" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "proofPoints" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "salaryFloor" INTEGER;
+ALTER TABLE "Profile" ADD COLUMN "superpowers" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "timezone" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "twitter" TEXT;
+ALTER TABLE "Profile" ADD COLUMN "visaStatus" TEXT;
