@@ -10,7 +10,6 @@ datasource db {
 model Profile {
   id             String   @id @default(cuid())
   cv             String
-  targetRoles    String   // JSON string[]
   salaryMin      Int?
   salaryMax      Int?
   location       String?
@@ -46,8 +45,8 @@ model Profile {
   // Proof points
   proofPoints      String?   // JSON array: [{name, url, heroMetric}]
 
-  // Target roles — profile archetypes (distinct from DiscoveryPrefs.archetypes)
-  archetypes       String?   // JSON array: [{name, level, fit}]
+  // Target roles
+  roleTargets      String?   // JSON array: [{title, priority, seniority, pitchWhen?}]
 
   // CV output
   cvFormat         String?   // "html"|"latex"
@@ -56,12 +55,12 @@ model Profile {
 }
 
 model DiscoveryPrefs {
-  id         String   @id @default(cuid())
-  portals    String   // JSON string[] of portal keys
-  keywords   String   // JSON string[]
-  archetypes String   // JSON string[]
-  minScore   String?  // "A"|"B"|"C"|"D"|"F"
-  updatedAt  DateTime @updatedAt
+  id          String   @id @default(cuid())
+  portals     String   // JSON string[] of portal keys
+  keywords    String   // JSON string[]
+  titleFilter String?  // JSON: {derived: string[], custom: string[], negative: string[], seniorityBoost: string[]}
+  minScore    String?  // "A"|"B"|"C"|"D"|"F"
+  updatedAt   DateTime @updatedAt
 }
 
 model ResumePrefs {

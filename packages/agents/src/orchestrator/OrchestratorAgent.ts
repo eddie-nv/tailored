@@ -16,10 +16,18 @@ const CONFIG_TOOLS: Anthropic.Tool[] = [
     input_schema: {
       type: 'object' as const,
       properties: {
-        targetRoles: {
+        roleTargets: {
           type: 'array',
-          items: { type: 'string' },
-          description: 'New complete list of target job roles',
+          items: {
+            type: 'object',
+            properties: {
+              title: { type: 'string' },
+              priority: { type: 'string', enum: ['primary', 'backup', 'stretch'] },
+              seniority: { type: 'string' },
+            },
+            required: ['title', 'priority', 'seniority'],
+          },
+          description: 'New complete list of target roles with priority and seniority',
         },
         location: { type: 'string', description: 'Target work location' },
         workType: {
@@ -34,7 +42,7 @@ const CONFIG_TOOLS: Anthropic.Tool[] = [
   },
   {
     name: 'update_discovery',
-    description: 'Update discovery preferences: keywords, archetypes, or minimum score threshold.',
+    description: 'Update discovery preferences: keywords, title filters, or minimum score threshold.',
     input_schema: {
       type: 'object' as const,
       properties: {
@@ -42,11 +50,6 @@ const CONFIG_TOOLS: Anthropic.Tool[] = [
           type: 'array',
           items: { type: 'string' },
           description: 'New complete list of search keywords',
-        },
-        archetypes: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'New complete list of job archetypes',
         },
         minScore: {
           type: 'string',
@@ -81,9 +84,14 @@ const CONFIG_TOOLS: Anthropic.Tool[] = [
 function buildSystemPrompt(state: AppState): string {
   const jobCount = state.jobs.length
   const hasProfile = state.profile !== null
-  const targetRoles = hasProfile
-    ? (safeParseJson<string[]>(state.profile!.targetRoles, []).join(', ') || 'none set')
-    : 'not set'
+  type RoleTarget = { title: string; priority: string }
+  const roleTargets = hasProfile
+    ? safeParseJson<RoleTarget[]>(state.profile!.roleTargets ?? '[]', [])
+    : []
+  const targetRoles = roleTargets.length
+    ? roleTargets.filter((r) => r.priority === 'primary').map((r) => r.title).join(', ') ||
+      roleTargets.map((r) => r.title).join(', ')
+    : 'none set'
 
   return `You are Tailored, an AI job search assistant. You help users find, evaluate, and apply for jobs.
 
@@ -263,7 +271,7 @@ export class OrchestratorAgent extends BaseAgent {
   private async executeConfigTool(name: string, input: Record<string, unknown>): Promise<void> {
     if (name === 'update_profile') {
       const updateData: Record<string, unknown> = {}
-      if (Array.isArray(input.targetRoles)) updateData.targetRoles = JSON.stringify(input.targetRoles)
+      if (Array.isArray(input.roleTargets)) updateData.roleTargets = JSON.stringify(input.roleTargets)
       if (typeof input.location === 'string') updateData.location = input.location
       if (typeof input.workType === 'string') updateData.workType = input.workType
       if (typeof input.salaryMin === 'number') updateData.salaryMin = input.salaryMin
@@ -276,7 +284,6 @@ export class OrchestratorAgent extends BaseAgent {
         await prisma.profile.create({
           data: {
             cv: '',
-            targetRoles: JSON.stringify([]),
             scoringWeights: JSON.stringify({}),
             ...updateData,
           },
@@ -288,7 +295,6 @@ export class OrchestratorAgent extends BaseAgent {
     if (name === 'update_discovery') {
       const updateData: Record<string, unknown> = {}
       if (Array.isArray(input.keywords)) updateData.keywords = JSON.stringify(input.keywords)
-      if (Array.isArray(input.archetypes)) updateData.archetypes = JSON.stringify(input.archetypes)
       if (typeof input.minScore === 'string') updateData.minScore = input.minScore
 
       const existing = await prisma.discoveryPrefs.findFirst()
@@ -299,7 +305,6 @@ export class OrchestratorAgent extends BaseAgent {
           data: {
             portals: JSON.stringify([]),
             keywords: JSON.stringify([]),
-            archetypes: JSON.stringify([]),
             ...updateData,
           },
         })

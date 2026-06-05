@@ -14,7 +14,6 @@ type MinScore = '' | 'A' | 'B' | 'C' | 'D' | 'F'
 type DiscoveryForm = {
   portals: string[]
   keywords: string[]
-  archetypes: string[]
   minScore: MinScore
 }
 
@@ -28,11 +27,10 @@ const LABEL_STYLES = {
 }
 
 function parseDiscovery(raw: Record<string, unknown> | null): DiscoveryForm {
-  if (!raw) return { portals: [], keywords: [], archetypes: [], minScore: '' }
+  if (!raw) return { portals: [], keywords: [], minScore: '' }
   return {
-    portals: safeParseJson<string[]>(raw.portals, []),
-    keywords: safeParseJson<string[]>(raw.keywords, []),
-    archetypes: safeParseJson<string[]>(raw.archetypes, []),
+    portals: Array.isArray(raw.portals) ? raw.portals as string[] : safeParseJson<string[]>(raw.portals, []),
+    keywords: Array.isArray(raw.keywords) ? raw.keywords as string[] : safeParseJson<string[]>(raw.keywords, []),
     minScore: (raw.minScore as MinScore) ?? '',
   }
 }
@@ -64,7 +62,6 @@ export function DiscoveryTile() {
         body: JSON.stringify({
           portals: data.portals,
           keywords: data.keywords,
-          archetypes: data.archetypes,
           minScore: data.minScore || null,
         }),
       })
@@ -114,13 +111,6 @@ export function DiscoveryTile() {
             value={form.keywords}
             onChange={(v) => handleChange('keywords', v)}
             placeholder="e.g. TypeScript, distributed systems"
-          />
-
-          <TagInput
-            label="Archetypes"
-            value={form.archetypes}
-            onChange={(v) => handleChange('archetypes', v)}
-            placeholder="e.g. LLMOps, Agentic, PM"
           />
 
           <NativeSelect
