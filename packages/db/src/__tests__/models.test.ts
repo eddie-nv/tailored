@@ -24,7 +24,6 @@ beforeEach(async () => {
 describe('Profile', () => {
   const base = {
     cv: '# John Doe\nSoftware Engineer',
-    targetRoles: JSON.stringify(['Staff Engineer', 'Principal Engineer']),
     scoringWeights: JSON.stringify({ technical: 0.4, culture: 0.3, growth: 0.3 }),
   }
 
@@ -65,7 +64,6 @@ describe('DiscoveryPrefs', () => {
   const base = {
     portals: JSON.stringify(['ashby', 'greenhouse', 'lever']),
     keywords: JSON.stringify(['TypeScript', 'AI', 'distributed systems']),
-    archetypes: JSON.stringify(['LLMOps', 'Agentic']),
   }
 
   it('creates discovery prefs', async () => {

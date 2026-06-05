@@ -8,7 +8,11 @@ async function main() {
     create: {
       id: 'seed-profile',
       cv: '# Jane Smith\n\nSenior Software Engineer with 8 years building distributed systems and AI applications.',
-      targetRoles: JSON.stringify(['Staff Engineer', 'Principal Engineer', 'Engineering Manager']),
+      roleTargets: JSON.stringify([
+        { title: 'Staff Engineer', priority: 'primary', seniority: 'Staff / Principal', pitchWhen: '' },
+        { title: 'Principal Engineer', priority: 'primary', seniority: 'Principal', pitchWhen: '' },
+        { title: 'Engineering Manager', priority: 'backup', seniority: 'Senior Manager', pitchWhen: '' },
+      ]),
       salaryMin: 180000,
       salaryMax: 280000,
       location: 'San Francisco, CA',
@@ -29,7 +33,12 @@ async function main() {
       id: 'seed-discovery',
       portals: JSON.stringify(['ashby', 'greenhouse', 'lever', 'wellfound']),
       keywords: JSON.stringify(['TypeScript', 'distributed systems', 'AI', 'LLM']),
-      archetypes: JSON.stringify(['LLMOps', 'Agentic', 'FDE']),
+      titleFilter: JSON.stringify({
+        derived: ['Staff Engineer', 'Principal Engineer'],
+        custom: [],
+        negative: ['intern', 'contractor'],
+        seniorityBoost: ['Senior', 'Staff', 'Principal', 'Lead', 'Head', 'Director'],
+      }),
       minScore: 'B',
     },
     update: {},

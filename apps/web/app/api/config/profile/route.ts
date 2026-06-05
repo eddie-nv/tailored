@@ -2,10 +2,18 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@tailored/db/client'
 
+const DEFAULT_SENIORITY_BOOST = ['Senior', 'Staff', 'Principal', 'Lead', 'Head', 'Director']
+
+const RoleTargetSchema = z.object({
+  title: z.string().max(200),
+  priority: z.enum(['primary', 'backup', 'stretch']),
+  seniority: z.string().max(100),
+  pitchWhen: z.string().max(2000).optional(),
+})
+
 const PatchSchema = z.object({
   // existing
   cv: z.string().max(50000).optional(),
-  targetRoles: z.array(z.string().max(100)).max(50).optional(),
   salaryMin: z.number().int().min(0).nullable().optional(),
   salaryMax: z.number().int().min(0).nullable().optional(),
   location: z.string().max(200).nullable().optional(),
@@ -30,12 +38,8 @@ const PatchSchema = z.object({
   timezone: z.string().max(100).nullable().optional(),
   visaStatus: z.string().max(200).nullable().optional(),
   onsiteAvailability: z.string().max(200).nullable().optional(),
-  // target roles archetypes
-  archetypes: z.array(z.object({
-    name: z.string().max(200),
-    level: z.string().max(100),
-    fit: z.enum(['primary', 'secondary', 'adjacent']),
-  })).nullable().optional(),
+  // role targets
+  roleTargets: z.array(RoleTargetSchema).nullable().optional(),
   // proof points
   proofPoints: z.array(z.object({
     name: z.string().max(200),
@@ -58,10 +62,9 @@ export async function GET() {
       success: true,
       data: {
         ...profile,
-        targetRoles: JSON.parse(profile.targetRoles ?? '[]'),
         scoringWeights: JSON.parse(profile.scoringWeights ?? '{}'),
         superpowers: profile.superpowers ? JSON.parse(profile.superpowers) : null,
-        archetypes: profile.archetypes ? JSON.parse(profile.archetypes) : null,
+        roleTargets: profile.roleTargets ? JSON.parse(profile.roleTargets) : null,
         proofPoints: profile.proofPoints ? JSON.parse(profile.proofPoints) : null,
       },
     })
@@ -87,7 +90,6 @@ export async function PATCH(req: Request) {
   const updateData: Record<string, unknown> = {}
 
   if (data.cv !== undefined) updateData.cv = data.cv
-  if (data.targetRoles !== undefined) updateData.targetRoles = JSON.stringify(data.targetRoles)
   if (data.salaryMin !== undefined) updateData.salaryMin = data.salaryMin
   if (data.salaryMax !== undefined) updateData.salaryMax = data.salaryMax
   if (data.location !== undefined) updateData.location = data.location
@@ -112,8 +114,8 @@ export async function PATCH(req: Request) {
   if (data.timezone !== undefined) updateData.timezone = data.timezone
   if (data.visaStatus !== undefined) updateData.visaStatus = data.visaStatus
   if (data.onsiteAvailability !== undefined) updateData.onsiteAvailability = data.onsiteAvailability
-  // target roles archetypes
-  if (data.archetypes !== undefined) updateData.archetypes = data.archetypes === null ? null : JSON.stringify(data.archetypes)
+  // role targets
+  if (data.roleTargets !== undefined) updateData.roleTargets = data.roleTargets === null ? null : JSON.stringify(data.roleTargets)
   // proof points
   if (data.proofPoints !== undefined) updateData.proofPoints = data.proofPoints === null ? null : JSON.stringify(data.proofPoints)
   // cv output
@@ -128,24 +130,63 @@ export async function PATCH(req: Request) {
       : await prisma.profile.create({
           data: {
             cv: typeof data.cv === 'string' ? data.cv : '',
-            targetRoles: JSON.stringify(data.targetRoles ?? []),
             scoringWeights: JSON.stringify({}),
             ...updateData,
           },
         })
 
+    // Cascade: sync primary roleTargets titles into DiscoveryPrefs.titleFilter.derived
+    if (data.roleTargets !== undefined) {
+      await cascadeDerivedTitles(data.roleTargets ?? [])
+    }
+
     return NextResponse.json({
       success: true,
       data: {
         ...profile,
-        targetRoles: JSON.parse(profile.targetRoles ?? '[]'),
         scoringWeights: JSON.parse(profile.scoringWeights ?? '{}'),
         superpowers: profile.superpowers ? JSON.parse(profile.superpowers) : null,
-        archetypes: profile.archetypes ? JSON.parse(profile.archetypes) : null,
+        roleTargets: profile.roleTargets ? JSON.parse(profile.roleTargets) : null,
         proofPoints: profile.proofPoints ? JSON.parse(profile.proofPoints) : null,
       },
     })
   } catch {
     return NextResponse.json({ success: false, error: 'Failed to save profile' }, { status: 500 })
+  }
+}
+
+type RoleTarget = z.infer<typeof RoleTargetSchema>
+
+async function cascadeDerivedTitles(roleTargets: RoleTarget[]): Promise<void> {
+  const derived = roleTargets
+    .filter((r) => r.priority === 'primary')
+    .map((r) => r.title)
+    .filter(Boolean)
+
+  const existingPrefs = await prisma.discoveryPrefs.findFirst()
+
+  if (existingPrefs) {
+    const current = existingPrefs.titleFilter
+      ? JSON.parse(existingPrefs.titleFilter)
+      : { derived: [], custom: [], negative: [], seniorityBoost: DEFAULT_SENIORITY_BOOST }
+
+    const updated = { ...current, derived }
+    await prisma.discoveryPrefs.update({
+      where: { id: existingPrefs.id },
+      data: { titleFilter: JSON.stringify(updated) },
+    })
+  } else {
+    await prisma.discoveryPrefs.create({
+      data: {
+        portals: JSON.stringify([]),
+        keywords: JSON.stringify([]),
+        titleFilter: JSON.stringify({
+          derived,
+          custom: [],
+          negative: [],
+          seniorityBoost: DEFAULT_SENIORITY_BOOST,
+        }),
+      },
+    })
   }
 }

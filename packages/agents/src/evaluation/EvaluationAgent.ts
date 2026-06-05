@@ -129,8 +129,13 @@ Respond in JSON only: {"archetype": "...", "company": "...", "role": "..."}`,
     // ── Step 2: Scoring ──────────────────────────────────────────────────────
     yield stepStarted('scoring')
 
-    const targetRoles = profile?.targetRoles
-      ? safeParseJson<string[]>(profile.targetRoles, []).join(', ')
+    type RoleTarget = { title: string; priority: string; seniority: string }
+    const roleTargets = profile?.roleTargets
+      ? safeParseJson<RoleTarget[]>(profile.roleTargets, [])
+      : []
+    const targetRoles = roleTargets.length
+      ? roleTargets.filter((r) => r.priority === 'primary').map((r) => r.title).join(', ') ||
+        roleTargets.map((r) => r.title).join(', ')
       : 'not specified'
     const location = profile?.location ?? 'not specified'
     const workType = profile?.workType ?? 'not specified'
