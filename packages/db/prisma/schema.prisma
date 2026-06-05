@@ -18,6 +18,38 @@ model Profile {
   scoringWeights String   // JSON object
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  // Identity
+  fullName         String?
+  email            String?
+  phone            String?
+  linkedin         String?
+  portfolioUrl     String?
+  github           String?
+  twitter          String?
+
+  // Narrative
+  headline         String?
+  exitStory        String?
+  superpowers      String?   // JSON string[]
+
+  // Compensation extras
+  currency              String?
+  salaryFloor           Int?
+  locationFlexibility   String?
+
+  // Location / auth
+  timezone          String?
+  visaStatus        String?
+  onsiteAvailability String?
+
+  // Proof points
+  proofPoints      String?   // JSON array: [{name, url, heroMetric}]
+
+  // CV output
+  cvFormat         String?   // "html"|"latex"
+  canvaDesignId    String?
+  autoPdfThreshold Float?
 }
 
 model DiscoveryPrefs {
