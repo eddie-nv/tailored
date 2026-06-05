@@ -1,6 +1,6 @@
 'use client'
 
-import { Paper, Group, Text, Stack, NumberInput, Select, TextInput, Center, Loader } from '@mantine/core'
+import { Paper, Group, Text, Stack, SimpleGrid, NumberInput, Select, TextInput, Center, Loader } from '@mantine/core'
 import { useProfileField } from '../../../../hooks/useProfileField'
 import { SaveIndicator } from '../../SaveIndicator'
 
@@ -62,7 +62,7 @@ export function CompensationTile() {
         </Center>
       ) : (
         <Stack gap={16}>
-          <Group gap={12} grow>
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={12}>
             <NumberInput
               label="Salary Min"
               value={form.salaryMin}
@@ -83,7 +83,7 @@ export function CompensationTile() {
               placeholder="160,000"
               styles={{ label: labelStyle }}
             />
-          </Group>
+          </SimpleGrid>
 
           <NumberInput
             label="Salary Floor (walk-away)"
