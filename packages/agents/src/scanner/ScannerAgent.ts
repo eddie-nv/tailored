@@ -5,6 +5,14 @@ import { BaseAgent } from '../shared/base-agent'
 import { loadAppState } from '../shared/state'
 import { randomUUID } from 'crypto'
 import { PORTAL_GROUPS, detectPlatformFromUrl, extractSlugFromUrl } from './portals'
+import {
+  matchesTitleFilter,
+  isSeniorityBoosted,
+  matchesLocationFilter,
+  parseTitleFilter,
+  parseLocationFilter,
+} from './filters'
+import type { StoredTitleFilter, StoredLocationFilter } from './filters'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -12,6 +20,7 @@ interface ScannedJob {
   company: string
   role: string
   url: string
+  location?: string
 }
 
 interface PlatformBatch {
@@ -47,39 +56,6 @@ function matchesKeywords(title: string, keywords: string[]): boolean {
   return keywords.some((kw) => lower.includes(kw.toLowerCase()))
 }
 
-type StoredTitleFilter = {
-  derived: string[]
-  custom: string[]
-  negative: string[]
-  seniorityBoost: string[]
-}
-
-function parseTitleFilter(raw: string | null): StoredTitleFilter {
-  if (!raw) return { derived: [], custom: [], negative: [], seniorityBoost: [] }
-  try {
-    const parsed = JSON.parse(raw) as StoredTitleFilter
-    return {
-      derived: Array.isArray(parsed.derived) ? parsed.derived : [],
-      custom: Array.isArray(parsed.custom) ? parsed.custom : [],
-      negative: Array.isArray(parsed.negative) ? parsed.negative : [],
-      seniorityBoost: Array.isArray(parsed.seniorityBoost) ? parsed.seniorityBoost : [],
-    }
-  } catch {
-    return { derived: [], custom: [], negative: [], seniorityBoost: [] }
-  }
-}
-
-function matchesTitleFilter(title: string, positive: string[], negative: string[]): boolean {
-  const lower = title.toLowerCase()
-  if (negative.some((kw) => lower.includes(kw.toLowerCase()))) return false
-  if (positive.length === 0) return true
-  return positive.some((kw) => lower.includes(kw.toLowerCase()))
-}
-
-function isSeniorityBoosted(title: string, seniorityBoost: string[]): boolean {
-  const lower = title.toLowerCase()
-  return seniorityBoost.some((prefix) => lower.startsWith(prefix.toLowerCase()))
-}
 
 // ── Platform Fetchers ─────────────────────────────────────────────────────────
 
@@ -103,6 +79,7 @@ async function fetchAshby(slug: string, signal: AbortSignal): Promise<ScannedJob
     company: slug,
     role: p.title,
     url: p.externalLink ?? `https://jobs.ashbyhq.com/${slug}`,
+    location: p.locationName,
   }))
 }
 
@@ -126,6 +103,7 @@ async function fetchGreenhouse(slug: string, signal: AbortSignal): Promise<Scann
     company: slug,
     role: j.title,
     url: j.absolute_url ?? `https://boards.greenhouse.io/${slug}/jobs/${j.id}`,
+    location: j.location?.name,
   }))
 }
 
@@ -145,6 +123,7 @@ async function fetchLever(slug: string, signal: AbortSignal): Promise<ScannedJob
     company: slug,
     role: p.text,
     url: p.hostedUrl ?? `https://jobs.lever.co/${slug}`,
+    location: p.categories?.location,
   }))
 }
 
@@ -181,6 +160,7 @@ async function scanPlatformBatch(
   existingUrls: Set<string>,
   keywords: string[],
   titleFilter: StoredTitleFilter,
+  locationFilter: StoredLocationFilter,
   signal: AbortSignal,
 ): Promise<ScannedJob[]> {
   const platformName = batch.platformName.toLowerCase()
@@ -209,6 +189,7 @@ async function scanPlatformBatch(
       (j) =>
         matchesKeywords(j.role, keywords) &&
         matchesTitleFilter(j.role, positive, titleFilter.negative) &&
+        matchesLocationFilter(j.location, locationFilter) &&
         !existingUrls.has(j.url),
     )
 
@@ -279,6 +260,7 @@ export class ScannerAgent extends BaseAgent {
       : []
 
     const titleFilter = parseTitleFilter(discoveryPrefs?.titleFilter ?? null)
+    const locationFilter = parseLocationFilter(discoveryPrefs?.locationFilter ?? null)
 
     const rawCustomPortals = await prisma.customPortal.findMany({ where: { enabled: true } })
     const { scannable: customBatches, skipped: skippedPortals } = buildCustomBatches(rawCustomPortals)
@@ -305,7 +287,7 @@ export class ScannerAgent extends BaseAgent {
 
       yield stepStarted(`scanning-${batch.platformName}`)
 
-      const found = await scanPlatformBatch(batch, existingUrls, keywords, titleFilter, signal)
+      const found = await scanPlatformBatch(batch, existingUrls, keywords, titleFilter, locationFilter, signal)
       allNewJobs.push(...found)
       done += 1
 

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@tailored/db/client'
-import { cascadeDerivedTitles } from '../../../lib/cascade'
+import { cascadeDerivedTitles, cascadeDerivedLocations } from '../../../lib/cascade'
 import { computeDerivedTitles } from '../../../lib/roleTargets'
+import { computeDerivedLocations } from '../../../lib/locationFilter'
 
 const RoleTargetSchema = z.object({
   title: z.string().max(200),
@@ -139,6 +140,20 @@ export async function PATCH(req: Request) {
     if (data.roleTargets !== undefined) {
       const derived = computeDerivedTitles(data.roleTargets ?? [])
       await cascadeDerivedTitles(derived, prisma)
+    }
+
+    // Cascade: sync location fields into DiscoveryPrefs.locationFilter.derived
+    if (
+      data.location !== undefined ||
+      data.workType !== undefined ||
+      data.locationFlexibility !== undefined
+    ) {
+      const derivedLocations = computeDerivedLocations({
+        workType: profile.workType,
+        location: profile.location,
+        locationFlexibility: profile.locationFlexibility,
+      })
+      await cascadeDerivedLocations(derivedLocations, prisma)
     }
 
     return NextResponse.json({
