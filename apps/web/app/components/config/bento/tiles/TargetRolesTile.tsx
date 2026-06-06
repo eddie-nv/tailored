@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
 import {
   Paper, Group, Text, Stack, TextInput, Select, ActionIcon, Button,
-  Center, Loader, Collapse, Textarea,
+  Center, Loader,
 } from '@mantine/core'
 import { useProfileField } from '../../../../hooks/useProfileField'
 import { SaveIndicator } from '../../SaveIndicator'
@@ -12,7 +12,6 @@ type RoleTarget = {
   title: string
   priority: 'primary' | 'backup' | 'stretch'
   seniority: string
-  pitchWhen: string
 }
 
 type TargetRolesForm = { roleTargets: RoleTarget[] }
@@ -34,10 +33,16 @@ const PRIORITY_ORDER: Record<RoleTarget['priority'], number> = {
   stretch: 2,
 }
 
-const PRIORITY_DOT: Record<RoleTarget['priority'], string> = {
+const PRIORITY_BG: Record<RoleTarget['priority'], string> = {
   primary: '#3b82f6',
-  backup: '#71717a',
-  stretch: '#a1a1aa',
+  backup: '#e4e4e7',
+  stretch: '#d1fae5',
+}
+
+const PRIORITY_FG: Record<RoleTarget['priority'], string> = {
+  primary: '#ffffff',
+  backup: '#52525b',
+  stretch: '#065f46',
 }
 
 const PRIORITY_OPTIONS = [
@@ -46,7 +51,7 @@ const PRIORITY_OPTIONS = [
   { value: 'stretch', label: 'Stretch' },
 ]
 
-const EMPTY_ROLE: RoleTarget = { title: '', priority: 'primary', seniority: '', pitchWhen: '' }
+const EMPTY_ROLE: RoleTarget = { title: '', priority: 'primary', seniority: '' }
 
 const TrashIcon = () => (
   <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -54,22 +59,7 @@ const TrashIcon = () => (
   </svg>
 )
 
-const ChevronIcon = ({ open }: { open: boolean }) => (
-  <svg
-    width={13}
-    height={13}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2.5}
-    aria-hidden="true"
-    style={{ transition: 'transform 180ms ease', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-  </svg>
-)
-
-const labelStyle = {
+const colLabelStyle = {
   fontSize: '0.6875rem',
   fontWeight: 500 as const,
   textTransform: 'uppercase' as const,
@@ -79,16 +69,6 @@ const labelStyle = {
 
 export function TargetRolesTile() {
   const { form, handleChange, saveStatus } = useProfileField(parse, serialize)
-  const [expanded, setExpanded] = useState<Set<number>>(new Set())
-
-  const toggleExpand = useCallback((originalIdx: number) => {
-    setExpanded((prev) => {
-      const next = new Set(prev)
-      if (next.has(originalIdx)) next.delete(originalIdx)
-      else next.add(originalIdx)
-      return next
-    })
-  }, [])
 
   const handleRoleField = useCallback(
     (originalIdx: number, field: keyof RoleTarget, val: string) => {
@@ -105,11 +85,6 @@ export function TargetRolesTile() {
     (originalIdx: number) => {
       if (!form) return
       handleChange('roleTargets', form.roleTargets.filter((_, i) => i !== originalIdx))
-      setExpanded((prev) => {
-        const next = new Set(prev)
-        next.delete(originalIdx)
-        return next
-      })
     },
     [form, handleChange],
   )
@@ -146,100 +121,75 @@ export function TargetRolesTile() {
         </Center>
       ) : (
         <Stack gap={8}>
-          {sorted.map(({ originalIdx, ...role }) => {
-            const isOpen = expanded.has(originalIdx)
-            const dotColor = PRIORITY_DOT[role.priority]
+          <Group gap={8} wrap="nowrap" px="sm" pb={2}>
+            <Text style={{ ...colLabelStyle, flex: 2 }}>Role</Text>
+            <Text style={{ ...colLabelStyle, flex: 1 }}>Level</Text>
+            <Text style={{ ...colLabelStyle, width: 95, flexShrink: 0 }}>Priority</Text>
+            <div style={{ width: 26, flexShrink: 0 }} />
+          </Group>
 
-            return (
-              <Paper
-                key={originalIdx}
-                withBorder
-                p="sm"
-                style={{
-                  borderLeft: `3px solid ${dotColor}`,
-                  transition: 'border-color 200ms ease',
-                }}
-              >
-                <Stack gap={8}>
-                  <Group gap={8} wrap="nowrap" align="flex-start">
-                    <TextInput
-                      placeholder="e.g. Staff Engineer"
-                      value={role.title}
-                      onChange={(e) => handleRoleField(originalIdx, 'title', e.target.value)}
-                      aria-label="Role title"
-                      style={{ flex: 2 }}
-                      styles={{ input: { fontSize: '0.875rem' } }}
-                    />
-                    <TextInput
-                      placeholder="Senior / Staff"
-                      value={role.seniority}
-                      onChange={(e) => handleRoleField(originalIdx, 'seniority', e.target.value)}
-                      aria-label="Seniority"
-                      style={{ flex: 1 }}
-                      styles={{ input: { fontSize: '0.875rem' } }}
-                    />
-                    <Select
-                      data={PRIORITY_OPTIONS}
-                      value={role.priority}
-                      onChange={(v) => v && handleRoleField(originalIdx, 'priority', v as RoleTarget['priority'])}
-                      aria-label="Priority"
-                      allowDeselect={false}
-                      style={{ width: 100, flexShrink: 0 }}
-                      styles={{
-                        input: {
-                          fontSize: '0.8125rem',
-                          color: dotColor,
-                          fontWeight: 500,
-                          borderColor: `${dotColor}40`,
-                        },
-                      }}
-                    />
-                    <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        size="sm"
-                        onClick={() => toggleExpand(originalIdx)}
-                        aria-label={isOpen ? 'Hide pitch guidance' : 'Add pitch guidance'}
-                        aria-expanded={isOpen}
-                      >
-                        <ChevronIcon open={isOpen} />
-                      </ActionIcon>
-                      <ActionIcon
-                        variant="subtle"
-                        color="red"
-                        size="sm"
-                        onClick={() => handleRoleRemove(originalIdx)}
-                        aria-label="Remove role"
-                      >
-                        <TrashIcon />
-                      </ActionIcon>
-                    </Group>
-                  </Group>
-
-                  <Collapse expanded={isOpen}>
-                    <Stack gap={4} pt={4}>
-                      <Text style={labelStyle}>Lead with this role when the JD emphasizes…</Text>
-                      <Textarea
-                        placeholder="e.g. production AI agents, LangGraph orchestration, reliability at scale"
-                        value={role.pitchWhen}
-                        onChange={(e) => handleRoleField(originalIdx, 'pitchWhen', e.target.value)}
-                        autosize
-                        minRows={2}
-                        maxRows={4}
-                        styles={{
-                          input: {
-                            fontSize: '0.8125rem',
-                            color: 'var(--mantine-color-dimmed)',
-                          },
-                        }}
-                      />
-                    </Stack>
-                  </Collapse>
-                </Stack>
-              </Paper>
-            )
-          })}
+          {sorted.map(({ originalIdx, ...role }) => (
+            <Paper
+              key={originalIdx}
+              withBorder
+              p="sm"
+            >
+              <Group gap={8} wrap="nowrap" align="center">
+                <TextInput
+                  placeholder="e.g. Staff Engineer"
+                  value={role.title}
+                  onChange={(e) => handleRoleField(originalIdx, 'title', e.target.value)}
+                  aria-label="Role title"
+                  style={{ flex: 2 }}
+                  styles={{ input: { fontSize: '0.875rem' } }}
+                />
+                <TextInput
+                  placeholder="e.g. Senior / Staff"
+                  value={role.seniority}
+                  onChange={(e) => handleRoleField(originalIdx, 'seniority', e.target.value)}
+                  aria-label="Level"
+                  style={{ flex: 1 }}
+                  styles={{ input: { fontSize: '0.875rem' } }}
+                />
+                <Select
+                  data={PRIORITY_OPTIONS}
+                  value={role.priority}
+                  onChange={(v) => v && handleRoleField(originalIdx, 'priority', v as RoleTarget['priority'])}
+                  aria-label="Priority"
+                  allowDeselect={false}
+                  variant="unstyled"
+                  style={{ width: 95, flexShrink: 0 }}
+                  styles={{
+                    input: {
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      backgroundColor: PRIORITY_BG[role.priority],
+                      color: PRIORITY_FG[role.priority],
+                      borderRadius: '999px',
+                      cursor: 'pointer',
+                      paddingLeft: 10,
+                      paddingRight: 28,
+                      height: 30,
+                      minHeight: 30,
+                    },
+                    section: { color: PRIORITY_FG[role.priority] },
+                  }}
+                />
+                <ActionIcon
+                  variant="subtle"
+                  color="red"
+                  size="sm"
+                  onClick={() => handleRoleRemove(originalIdx)}
+                  aria-label="Remove role"
+                  style={{ flexShrink: 0 }}
+                >
+                  <TrashIcon />
+                </ActionIcon>
+              </Group>
+            </Paper>
+          ))}
 
           <Button
             variant="subtle"
