@@ -1,3 +1,4 @@
+import { RoleTargetsProvider } from '../../../providers/RoleTargetsProvider'
 import { IdentityTile } from './tiles/IdentityTile'
 import { NarrativeTile } from './tiles/NarrativeTile'
 import { TargetRolesTile } from './tiles/TargetRolesTile'
@@ -11,17 +12,19 @@ import { PdfGateTile } from './tiles/PdfGateTile'
 
 export function ConfigBento() {
   return (
-    <div className="bento-grid">
-      <IdentityTile />
-      <NarrativeTile />
-      <TargetRolesTile />
-      <SearchFiltersTile />
-      <CompensationTile />
-      <WorkPrefsTile />
-      <CvOutputTile />
-      <DiscoveryTile />
-      <ProofPointsTile />
-      <PdfGateTile />
-    </div>
+    <RoleTargetsProvider>
+      <div className="bento-grid">
+        <IdentityTile />
+        <NarrativeTile />
+        <TargetRolesTile />
+        <SearchFiltersTile />
+        <CompensationTile />
+        <WorkPrefsTile />
+        <CvOutputTile />
+        <DiscoveryTile />
+        <ProofPointsTile />
+        <PdfGateTile />
+      </div>
+    </RoleTargetsProvider>
   )
 }

@@ -1,18 +1,15 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import {
   Paper, Group, Text, Stack, TextInput, Select, ActionIcon, Button,
   Center, Loader,
 } from '@mantine/core'
 import { useProfileField } from '../../../../hooks/useProfileField'
+import { useRoleDerivedTitles } from '../../../../providers/RoleTargetsProvider'
+import { computeDerivedTitles, serializeRoleTargets } from '../../../../lib/roleTargets'
+import type { RoleTarget } from '../../../../lib/roleTargets'
 import { SaveIndicator } from '../../SaveIndicator'
-
-type RoleTarget = {
-  title: string
-  priority: 'primary' | 'backup' | 'stretch'
-  seniority: string
-}
 
 type TargetRolesForm = { roleTargets: RoleTarget[] }
 
@@ -24,7 +21,7 @@ function parse(data: Record<string, unknown> | null): TargetRolesForm {
 }
 
 function serialize(form: TargetRolesForm): Record<string, unknown> {
-  return { roleTargets: form.roleTargets.length > 0 ? form.roleTargets : null }
+  return { roleTargets: serializeRoleTargets(form.roleTargets) }
 }
 
 const PRIORITY_ORDER: Record<RoleTarget['priority'], number> = {
@@ -69,6 +66,11 @@ const colLabelStyle = {
 
 export function TargetRolesTile() {
   const { form, handleChange, saveStatus } = useProfileField(parse, serialize)
+  const { setDerivedTitles } = useRoleDerivedTitles()
+
+  useEffect(() => {
+    setDerivedTitles(computeDerivedTitles(form?.roleTargets ?? []))
+  }, [form?.roleTargets, setDerivedTitles])
 
   const handleRoleField = useCallback(
     (originalIdx: number, field: keyof RoleTarget, val: string) => {
@@ -161,7 +163,7 @@ export function TargetRolesTile() {
                   style={{ width: 95, flexShrink: 0 }}
                   styles={{
                     input: {
-                      fontSize: '0.75rem',
+                      fontSize: '0.7rem',
                       fontWeight: 600,
                       textTransform: 'uppercase',
                       letterSpacing: '0.05em',
