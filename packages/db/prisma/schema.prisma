@@ -55,12 +55,13 @@ model Profile {
 }
 
 model DiscoveryPrefs {
-  id          String   @id @default(cuid())
-  portals     String   // JSON string[] of portal keys
-  keywords    String   // JSON string[]
-  titleFilter String?  // JSON: {derived: string[], custom: string[], negative: string[], seniorityBoost: string[]}
-  minScore    String?  // "A"|"B"|"C"|"D"|"F"
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  portals        String   // JSON string[] of portal keys
+  keywords       String   // JSON string[]
+  titleFilter    String?  // JSON: {derived: string[], custom: string[], negative: string[], seniorityBoost: string[]}
+  locationFilter String?  // JSON: {derived: string[], allow: string[], block: string[], alwaysAllow: string[]}
+  minScore       String?  // "A"|"B"|"C"|"D"|"F"
+  updatedAt      DateTime @updatedAt
 }
 
 model ResumePrefs {
