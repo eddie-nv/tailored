@@ -5,30 +5,27 @@ import { Paper, Group, Text, Stack, Badge, Center, Loader, Tooltip } from '@mant
 import { TagInput } from '../../TagInput'
 import { SaveIndicator } from '../../SaveIndicator'
 import { useDebouncedCallback } from '../../../../hooks/useDebouncedCallback'
-import { useRoleDerivedTitles } from '../../../../providers/RoleTargetsProvider'
 import type { SaveStatus } from '../../SaveIndicator'
 
-type TitleFilter = {
+type LocationFilter = {
   derived: string[]
-  custom: string[]
-  negative: string[]
-  seniorityBoost: string[]
+  allow: string[]
+  block: string[]
+  alwaysAllow: string[]
 }
 
-type SearchFiltersForm = {
-  titleFilter: TitleFilter
+type LocationFilterForm = {
+  locationFilter: LocationFilter
 }
 
-const DEFAULT_SENIORITY_BOOST = ['Senior', 'Staff', 'Principal', 'Lead', 'Head', 'Director']
-
-function parseSearchFilters(raw: Record<string, unknown> | null): SearchFiltersForm {
-  const tf = raw?.titleFilter as TitleFilter | undefined
+function parseLocationFilter(raw: Record<string, unknown> | null): LocationFilterForm {
+  const lf = raw?.locationFilter as LocationFilter | undefined
   return {
-    titleFilter: {
-      derived: Array.isArray(tf?.derived) ? tf.derived : [],
-      custom: Array.isArray(tf?.custom) ? tf.custom : [],
-      negative: Array.isArray(tf?.negative) ? tf.negative : [],
-      seniorityBoost: Array.isArray(tf?.seniorityBoost) ? tf.seniorityBoost : DEFAULT_SENIORITY_BOOST,
+    locationFilter: {
+      derived: Array.isArray(lf?.derived) ? lf.derived : [],
+      allow: Array.isArray(lf?.allow) ? lf.allow : [],
+      block: Array.isArray(lf?.block) ? lf.block : [],
+      alwaysAllow: Array.isArray(lf?.alwaysAllow) ? lf.alwaysAllow : [],
     },
   }
 }
@@ -48,17 +45,16 @@ const LockIcon = () => (
   </svg>
 )
 
-export function SearchFiltersTile() {
-  const { derivedTitles } = useRoleDerivedTitles()
-  const [form, setForm] = useState<SearchFiltersForm | null>(null)
+export function LocationFilterTile() {
+  const [form, setForm] = useState<LocationFilterForm | null>(null)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     fetch('/api/config/discovery')
       .then((r) => r.json())
-      .then(({ data }) => setForm(parseSearchFilters(data)))
-      .catch(() => setForm(parseSearchFilters(null)))
+      .then(({ data }) => setForm(parseLocationFilter(data)))
+      .catch(() => setForm(parseLocationFilter(null)))
   }, [])
 
   useEffect(() => {
@@ -67,17 +63,17 @@ export function SearchFiltersTile() {
     }
   }, [])
 
-  const debouncedSave = useDebouncedCallback(async (data: SearchFiltersForm) => {
+  const debouncedSave = useDebouncedCallback(async (data: LocationFilterForm) => {
     setSaveStatus('saving')
     try {
       const res = await fetch('/api/config/discovery', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          titleFilter: {
-            custom: data.titleFilter.custom,
-            negative: data.titleFilter.negative,
-            seniorityBoost: data.titleFilter.seniorityBoost,
+          locationFilter: {
+            allow: data.locationFilter.allow,
+            block: data.locationFilter.block,
+            alwaysAllow: data.locationFilter.alwaysAllow,
           },
         }),
       })
@@ -90,12 +86,12 @@ export function SearchFiltersTile() {
     }
   }, 500)
 
-  const handleTitleFilterChange = useCallback(
-    (patch: Partial<TitleFilter>) => {
+  const handleChange = useCallback(
+    (patch: Partial<Omit<LocationFilter, 'derived'>>) => {
       setForm((prev) => {
         if (!prev) return prev
-        const updated: SearchFiltersForm = {
-          titleFilter: { ...prev.titleFilter, ...patch },
+        const updated: LocationFilterForm = {
+          locationFilter: { ...prev.locationFilter, ...patch },
         }
         debouncedSave(updated)
         return updated
@@ -105,10 +101,10 @@ export function SearchFiltersTile() {
   )
 
   return (
-    <Paper withBorder p="lg" style={{ gridColumn: 'span 5' }} className="bento-tile">
+    <Paper withBorder p="lg" style={{ gridColumn: 'span 12' }} className="bento-tile">
       <Group justify="space-between" mb="md">
         <Text size="xs" fw={500} tt="uppercase" lts="0.1em" c="dimmed">
-          Search Filters
+          Location Filter
         </Text>
         <SaveIndicator status={saveStatus} />
       </Group>
@@ -119,14 +115,14 @@ export function SearchFiltersTile() {
         </Center>
       ) : (
         <Stack gap={24}>
-          <Stack gap={8}>
-            <Text style={LABEL_STYLES}>Include jobs with these titles</Text>
-            {derivedTitles.length > 0 && (
-              <Group gap={6} wrap="wrap" mb={4}>
-                {derivedTitles.map((title) => (
+          {form.locationFilter.derived.length > 0 && (
+            <Stack gap={8}>
+              <Text style={LABEL_STYLES}>Derived from your profile</Text>
+              <Group gap={6} wrap="wrap">
+                {form.locationFilter.derived.map((hint) => (
                   <Tooltip
-                    key={title}
-                    label="Synced from your primary roles"
+                    key={hint}
+                    label="Synced from your work preferences"
                     position="top"
                     withArrow
                     fz="xs"
@@ -138,36 +134,49 @@ export function SearchFiltersTile() {
                       leftSection={<LockIcon />}
                       style={{ cursor: 'default', userSelect: 'none' }}
                     >
-                      {title}
+                      {hint}
                     </Badge>
                   </Tooltip>
                 ))}
               </Group>
-            )}
-            <TagInput
-              label=""
-              value={form.titleFilter.custom}
-              onChange={(v) => handleTitleFilterChange({ custom: v })}
-              placeholder="Add custom title keywords"
-            />
-          </Stack>
-
-          <TagInput
-            label="Exclude jobs with these titles"
-            value={form.titleFilter.negative}
-            onChange={(v) => handleTitleFilterChange({ negative: v })}
-            placeholder="e.g. intern, contractor, unpaid"
-          />
+            </Stack>
+          )}
 
           <Stack gap={4}>
             <TagInput
-              label="Boost results with these seniority prefixes"
-              value={form.titleFilter.seniorityBoost}
-              onChange={(v) => handleTitleFilterChange({ seniorityBoost: v })}
-              placeholder="e.g. Staff, Principal"
+              label="Always Allow"
+              value={form.locationFilter.alwaysAllow}
+              onChange={(v) => handleChange({ alwaysAllow: v })}
+              placeholder="e.g. Remote, United States"
+              color="teal"
             />
             <Text size="xs" c="dimmed" mt={2}>
-              Jobs with these prefixes rank higher but aren't required to match.
+              These locations always pass, even if on the block list.
+            </Text>
+          </Stack>
+
+          <Stack gap={4}>
+            <TagInput
+              label="Allow"
+              value={form.locationFilter.allow}
+              onChange={(v) => handleChange({ allow: v })}
+              placeholder="e.g. Europe, Canada"
+            />
+            <Text size="xs" c="dimmed" mt={2}>
+              If set, jobs must match at least one. Empty means all locations pass.
+            </Text>
+          </Stack>
+
+          <Stack gap={4}>
+            <TagInput
+              label="Block"
+              value={form.locationFilter.block}
+              onChange={(v) => handleChange({ block: v })}
+              placeholder="e.g. China, requires relocation"
+              color="red"
+            />
+            <Text size="xs" c="dimmed" mt={2}>
+              Jobs matching these are excluded unless rescued by Always Allow.
             </Text>
           </Stack>
         </Stack>

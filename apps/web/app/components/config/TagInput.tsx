@@ -8,9 +8,10 @@ type Props = {
   onChange: (tags: string[]) => void
   placeholder?: string
   id?: string
+  color?: string
 }
 
-export function TagInput({ label, value, onChange, placeholder = 'Type and press Enter', id }: Props) {
+export function TagInput({ label, value, onChange, placeholder = 'Type and press Enter', id, color }: Props) {
   return (
     <TagsInput
       id={id}
@@ -19,6 +20,7 @@ export function TagInput({ label, value, onChange, placeholder = 'Type and press
       onChange={onChange}
       placeholder={value.length === 0 ? placeholder : ''}
       splitChars={[',']}
+      color={color}
       styles={{
         label: {
           fontSize: '0.6875rem',

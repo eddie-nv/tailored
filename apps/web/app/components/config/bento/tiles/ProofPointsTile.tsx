@@ -71,7 +71,7 @@ export function ProofPointsTile() {
   }, [form, handleChange])
 
   return (
-    <Paper withBorder p="lg" style={{ gridColumn: 'span 8' }} className="bento-tile">
+    <Paper withBorder p="lg" style={{ gridColumn: 'span 12' }} className="bento-tile">
       <Group justify="space-between" mb="md">
         <Text size="xs" fw={500} tt="uppercase" lts="0.1em" c="dimmed">
           Proof Points
