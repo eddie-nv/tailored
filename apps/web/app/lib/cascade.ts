@@ -70,9 +70,20 @@ export async function cascadeDerivedLocations(
   const existing = await prisma.discoveryPrefs.findFirst()
 
   if (existing) {
-    const current: StoredLocationFilter = existing.locationFilter
-      ? JSON.parse(existing.locationFilter)
-      : EMPTY_LOCATION_FILTER
+    let current: StoredLocationFilter = EMPTY_LOCATION_FILTER
+    if (existing.locationFilter) {
+      try {
+        const raw = JSON.parse(existing.locationFilter)
+        current = {
+          derived: Array.isArray(raw.derived) ? raw.derived : [],
+          allow: Array.isArray(raw.allow) ? raw.allow : [],
+          block: Array.isArray(raw.block) ? raw.block : [],
+          alwaysAllow: Array.isArray(raw.alwaysAllow) ? raw.alwaysAllow : [],
+        }
+      } catch {
+        current = EMPTY_LOCATION_FILTER
+      }
+    }
 
     if (areDerivedTitlesEqual(current.derived, derived)) return
 

@@ -17,7 +17,7 @@ const LocationFilterSchema = z.object({
 })
 
 const PatchSchema = z.object({
-  portals: z.array(z.string()).optional(),
+  portals: z.array(z.string().max(500)).max(200).optional(),
   keywords: z.array(z.string().max(100)).max(100).optional(),
   titleFilter: TitleFilterSchema.optional(),
   locationFilter: LocationFilterSchema.optional(),
