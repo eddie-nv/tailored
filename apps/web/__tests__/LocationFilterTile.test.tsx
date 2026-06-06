@@ -1,8 +1,48 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
 import { MantineProvider } from '@mantine/core'
 import { LocationFilterTile } from '../app/components/config/bento/tiles/LocationFilterTile'
+
+// Mock TagInput with a simple native input so we can interact with it reliably in JSDOM
+// (Mantine TagsInput + React 19 pointer events produces AggregateErrors via popover positioning)
+vi.mock('../app/components/config/TagInput', () => ({
+  TagInput: ({
+    label,
+    value,
+    onChange,
+  }: {
+    label: string
+    value: string[]
+    onChange: (tags: string[]) => void
+    placeholder?: string
+    color?: string
+  }) => {
+    const id = `mock-taginput-${label.toLowerCase().replace(/\s+/g, '-')}`
+    return (
+      <div>
+        <label htmlFor={id}>{label}</label>
+        <input
+          id={id}
+          defaultValue=""
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              const target = e.currentTarget as HTMLInputElement
+              if (target.value) {
+                onChange([...value, target.value])
+                target.value = ''
+              }
+            }
+          }}
+        />
+        {value.map((v) => (
+          <span key={v} data-tag>
+            {v}
+          </span>
+        ))}
+      </div>
+    )
+  },
+}))
 
 function Wrapper() {
   return (
@@ -53,13 +93,8 @@ function mockGetThenPatch(locationFilter: Partial<LocationFilter> = {}) {
     })
 }
 
-beforeEach(() => {
-  vi.useFakeTimers({ shouldAdvanceTime: true })
-})
-
 afterEach(() => {
   vi.restoreAllMocks()
-  vi.useRealTimers()
 })
 
 describe('LocationFilterTile — loading and render', () => {
@@ -90,12 +125,12 @@ describe('LocationFilterTile — loading and render', () => {
 
     render(<Wrapper />)
 
+    // Wait for load (Always Allow label appears)
     await waitFor(() => {
-      // Only way to know the tile loaded is that inputs are present
-      expect(screen.getByText(/always allow/i)).toBeInTheDocument()
+      expect(screen.getByText('Always Allow')).toBeInTheDocument()
     })
 
-    expect(screen.queryByTitle('Synced from your work preferences')).not.toBeInTheDocument()
+    expect(screen.queryByText('Derived from your profile')).not.toBeInTheDocument()
   })
 
   it('renders the three editable filter sections', async () => {
@@ -104,8 +139,9 @@ describe('LocationFilterTile — loading and render', () => {
     render(<Wrapper />)
 
     await waitFor(() => {
-      expect(screen.getByText(/always allow/i)).toBeInTheDocument()
-      expect(screen.getByText(/block/i)).toBeInTheDocument()
+      expect(screen.getByText('Always Allow')).toBeInTheDocument()
+      expect(screen.getByText('Allow')).toBeInTheDocument()
+      expect(screen.getByText('Block')).toBeInTheDocument()
     })
   })
 
@@ -124,55 +160,56 @@ describe('LocationFilterTile — loading and render', () => {
 
 describe('LocationFilterTile — save behaviour', () => {
   it('PATCHes /api/config/discovery when alwaysAllow changes', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) })
     const fetchMock = mockGetThenPatch()
     vi.stubGlobal('fetch', fetchMock)
 
     render(<Wrapper />)
 
-    await waitFor(() => expect(screen.getByText(/always allow/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Always Allow')).toBeInTheDocument())
 
-    const alwaysAllowInput = screen.getByRole('textbox', { name: /always allow/i })
-    await user.click(alwaysAllowInput)
-    await user.keyboard('Remote{Enter}')
-
-    vi.advanceTimersByTime(600)
-
-    await waitFor(() => {
-      const patchCall = fetchMock.mock.calls.find(
-        (c) => c[1]?.method === 'PATCH',
-      )
-      expect(patchCall).toBeDefined()
-      const body = JSON.parse(patchCall![1].body as string)
-      expect(body.locationFilter.alwaysAllow).toContain('Remote')
+    const input = screen.getByLabelText('Always Allow')
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'Remote' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
     })
+
+    await waitFor(
+      () => {
+        const patchCall = fetchMock.mock.calls.find((c) => c[1]?.method === 'PATCH')
+        expect(patchCall).toBeDefined()
+        const body = JSON.parse(patchCall![1].body as string)
+        expect(body.locationFilter.alwaysAllow).toContain('Remote')
+      },
+      { timeout: 2000 },
+    )
   })
 
   it('PATCHes with block when block TagInput changes', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) })
     const fetchMock = mockGetThenPatch()
     vi.stubGlobal('fetch', fetchMock)
 
     render(<Wrapper />)
 
-    await waitFor(() => expect(screen.getByText(/block/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Block')).toBeInTheDocument())
 
-    const blockInput = screen.getByRole('textbox', { name: /block/i })
-    await user.click(blockInput)
-    await user.keyboard('China{Enter}')
-
-    vi.advanceTimersByTime(600)
-
-    await waitFor(() => {
-      const patchCall = fetchMock.mock.calls.find((c) => c[1]?.method === 'PATCH')
-      expect(patchCall).toBeDefined()
-      const body = JSON.parse(patchCall![1].body as string)
-      expect(body.locationFilter.block).toContain('China')
+    const input = screen.getByLabelText('Block')
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'China' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
     })
+
+    await waitFor(
+      () => {
+        const patchCall = fetchMock.mock.calls.find((c) => c[1]?.method === 'PATCH')
+        expect(patchCall).toBeDefined()
+        const body = JSON.parse(patchCall![1].body as string)
+        expect(body.locationFilter.block).toContain('China')
+      },
+      { timeout: 2000 },
+    )
   })
 
   it('PATCH payload does not include derived field', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) })
     const fetchMock = mockGetThenPatch({ derived: ['Remote'] })
     vi.stubGlobal('fetch', fetchMock)
 
@@ -180,22 +217,24 @@ describe('LocationFilterTile — save behaviour', () => {
 
     await waitFor(() => expect(screen.getByText('Remote')).toBeInTheDocument())
 
-    const alwaysAllowInput = screen.getByRole('textbox', { name: /always allow/i })
-    await user.click(alwaysAllowInput)
-    await user.keyboard('US{Enter}')
-
-    vi.advanceTimersByTime(600)
-
-    await waitFor(() => {
-      const patchCall = fetchMock.mock.calls.find((c) => c[1]?.method === 'PATCH')
-      expect(patchCall).toBeDefined()
-      const body = JSON.parse(patchCall![1].body as string)
-      expect(body.locationFilter).not.toHaveProperty('derived')
+    const input = screen.getByLabelText('Always Allow')
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'US' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
     })
+
+    await waitFor(
+      () => {
+        const patchCall = fetchMock.mock.calls.find((c) => c[1]?.method === 'PATCH')
+        expect(patchCall).toBeDefined()
+        const body = JSON.parse(patchCall![1].body as string)
+        expect(body.locationFilter).not.toHaveProperty('derived')
+      },
+      { timeout: 2000 },
+    )
   })
 
   it('shows SaveIndicator in saving state while PATCH is in-flight', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) })
     let resolvePatch!: () => void
     const fetchMock = vi
       .fn()
@@ -208,23 +247,24 @@ describe('LocationFilterTile — save behaviour', () => {
       })
       .mockReturnValueOnce(
         new Promise((resolve) => {
-          resolvePatch = () =>
-            resolve({ ok: true, json: () => Promise.resolve({ data: {} }) })
+          resolvePatch = () => resolve({ ok: true, json: () => Promise.resolve({ data: {} }) })
         }),
       )
     vi.stubGlobal('fetch', fetchMock)
 
     render(<Wrapper />)
 
-    await waitFor(() => expect(screen.getByText(/always allow/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Always Allow')).toBeInTheDocument())
 
-    const input = screen.getByRole('textbox', { name: /always allow/i })
-    await user.click(input)
-    await user.keyboard('Remote{Enter}')
+    const input = screen.getByLabelText('Always Allow')
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'Remote' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+    })
 
-    vi.advanceTimersByTime(600)
-
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Saving…'))
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Saving…'), {
+      timeout: 2000,
+    })
 
     resolvePatch()
 

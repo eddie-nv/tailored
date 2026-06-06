@@ -7,6 +7,7 @@ import { WorkPrefsTile } from './tiles/WorkPrefsTile'
 import { CvOutputTile } from './tiles/CvOutputTile'
 import { DiscoveryTile } from './tiles/DiscoveryTile'
 import { SearchFiltersTile } from './tiles/SearchFiltersTile'
+import { LocationFilterTile } from './tiles/LocationFilterTile'
 import { ProofPointsTile } from './tiles/ProofPointsTile'
 import { PdfGateTile } from './tiles/PdfGateTile'
 
@@ -18,6 +19,7 @@ export function ConfigBento() {
         <NarrativeTile />
         <TargetRolesTile />
         <SearchFiltersTile />
+        <LocationFilterTile />
         <CompensationTile />
         <WorkPrefsTile />
         <CvOutputTile />
