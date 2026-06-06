@@ -5,6 +5,7 @@ import { Paper, Group, Text, Stack, Badge, Center, Loader, Tooltip } from '@mant
 import { TagInput } from '../../TagInput'
 import { SaveIndicator } from '../../SaveIndicator'
 import { useDebouncedCallback } from '../../../../hooks/useDebouncedCallback'
+import { useRoleDerivedTitles } from '../../../../providers/RoleTargetsProvider'
 import type { SaveStatus } from '../../SaveIndicator'
 
 type TitleFilter = {
@@ -48,6 +49,7 @@ const LockIcon = () => (
 )
 
 export function SearchFiltersTile() {
+  const { derivedTitles } = useRoleDerivedTitles()
   const [form, setForm] = useState<SearchFiltersForm | null>(null)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -119,9 +121,9 @@ export function SearchFiltersTile() {
         <Stack gap={24}>
           <Stack gap={8}>
             <Text style={LABEL_STYLES}>Include jobs with these titles</Text>
-            {form.titleFilter.derived.length > 0 && (
+            {derivedTitles.length > 0 && (
               <Group gap={6} wrap="wrap" mb={4}>
-                {form.titleFilter.derived.map((title) => (
+                {derivedTitles.map((title) => (
                   <Tooltip
                     key={title}
                     label="Synced from your primary roles"

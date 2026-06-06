@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@tailored/db/client'
-
-const DEFAULT_SENIORITY_BOOST = ['Senior', 'Staff', 'Principal', 'Lead', 'Head', 'Director']
+import { cascadeDerivedTitles } from '../../../lib/cascade'
+import { computeDerivedTitles } from '../../../lib/roleTargets'
 
 const RoleTargetSchema = z.object({
   title: z.string().max(200),
@@ -137,7 +137,8 @@ export async function PATCH(req: Request) {
 
     // Cascade: sync primary roleTargets titles into DiscoveryPrefs.titleFilter.derived
     if (data.roleTargets !== undefined) {
-      await cascadeDerivedTitles(data.roleTargets ?? [])
+      const derived = computeDerivedTitles(data.roleTargets ?? [])
+      await cascadeDerivedTitles(derived, prisma)
     }
 
     return NextResponse.json({
@@ -152,41 +153,5 @@ export async function PATCH(req: Request) {
     })
   } catch {
     return NextResponse.json({ success: false, error: 'Failed to save profile' }, { status: 500 })
-  }
-}
-
-type RoleTarget = z.infer<typeof RoleTargetSchema>
-
-async function cascadeDerivedTitles(roleTargets: RoleTarget[]): Promise<void> {
-  const derived = roleTargets
-    .filter((r) => r.priority === 'primary')
-    .map((r) => r.title)
-    .filter(Boolean)
-
-  const existingPrefs = await prisma.discoveryPrefs.findFirst()
-
-  if (existingPrefs) {
-    const current = existingPrefs.titleFilter
-      ? JSON.parse(existingPrefs.titleFilter)
-      : { derived: [], custom: [], negative: [], seniorityBoost: DEFAULT_SENIORITY_BOOST }
-
-    const updated = { ...current, derived }
-    await prisma.discoveryPrefs.update({
-      where: { id: existingPrefs.id },
-      data: { titleFilter: JSON.stringify(updated) },
-    })
-  } else {
-    await prisma.discoveryPrefs.create({
-      data: {
-        portals: JSON.stringify([]),
-        keywords: JSON.stringify([]),
-        titleFilter: JSON.stringify({
-          derived,
-          custom: [],
-          negative: [],
-          seniorityBoost: DEFAULT_SENIORITY_BOOST,
-        }),
-      },
-    })
   }
 }
