@@ -141,17 +141,17 @@ export function ProofPointsTile() {
                   </SimpleGrid>
                 </Paper>
               ))}
+
+              <Button
+                variant="subtle"
+                size="xs"
+                onClick={handleProofAdd}
+                style={{ alignSelf: 'flex-start' }}
+              >
+                + Add proof point
+              </Button>
             </>
           )}
-
-          <Button
-            variant="subtle"
-            size="xs"
-            onClick={handleProofAdd}
-            style={{ alignSelf: 'flex-start' }}
-          >
-            + Add proof point
-          </Button>
         </Stack>
       )}
     </Paper>
