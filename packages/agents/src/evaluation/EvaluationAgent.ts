@@ -3,7 +3,8 @@ import { EventType } from '@ag-ui/core'
 import type { RunAgentInput, BaseEvent } from '@ag-ui/core'
 import { prisma } from '@tailored/db/client'
 import { BaseAgent } from '../shared/base-agent'
-import { loadAppState } from '../shared/state'
+import { loadAppState, parseProofPoints } from '../shared/state'
+import type { ProofPoint } from '../shared/state'
 import { claudeStreamToEvents } from '../shared/transport'
 import { randomUUID } from 'crypto'
 
@@ -75,6 +76,7 @@ export class EvaluationAgent extends BaseAgent {
     const appState = await loadAppState(prisma)
     const profile = appState.profile
     const cv = profile?.cv ?? ''
+    const proofPoints = parseProofPoints(profile)
     const scoringWeights = profile?.scoringWeights
       ? safeParseJson<Record<string, number>>(profile.scoringWeights, {})
       : {}
@@ -211,7 +213,7 @@ Respond JSON only: {"cvMatchPct": 75, "matched_requirements": ["...", "..."], "g
         messages: [
           {
             role: 'user',
-            content: `CV:\n${cv.slice(0, 4000)}\n\nJob description:\n${jd.slice(0, 4000)}`,
+            content: `CV:\n${cv.slice(0, 4000)}${formatProofPoints(proofPoints)}\n\nJob description:\n${jd.slice(0, 4000)}`,
           },
         ],
       },
@@ -291,7 +293,7 @@ ${JSON.stringify(compData)}
 Analysis: is this competitive? Negotiation notes.
 
 ## Personalization
-3 specific talking points tailored to this candidate's background. What to emphasize in the application.
+${proofPoints.length > 0 ? `Candidate proof points (map directly to JD requirements):\n${proofPoints.map((p) => `- ${p.name}: ${p.heroMetric}${p.url ? ` (${p.url})` : ''}`).join('\n')}\n\n` : ''}3 specific talking points tailored to this candidate's background. What to emphasize in the application.
 
 ## Interview Prep
 Top 5 likely interview topics. 1-2 likely hard questions with suggested approach.
@@ -458,6 +460,12 @@ function applyWeights(
   }
 
   return weightSum > 0 ? Math.round((total / weightSum) * 10) : 50
+}
+
+function formatProofPoints(points: ProofPoint[]): string {
+  if (points.length === 0) return ''
+  const lines = points.map((p) => `- ${p.name}: ${p.heroMetric}${p.url ? ` (${p.url})` : ''}`)
+  return `\n\nProof points (quantified achievements — match these against JD requirements):\n${lines.join('\n')}`
 }
 
 function parseReportBlocks(text: string): Record<string, string> {
