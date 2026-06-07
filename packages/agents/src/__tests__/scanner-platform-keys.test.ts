@@ -5,22 +5,22 @@ describe('buildPlatformBatches — platform-level keys', () => {
   it('returns all 10 Ashby portals for key "ashby"', () => {
     const batches = buildPlatformBatches(['ashby'])
     expect(batches).toHaveLength(1)
-    expect(batches[0].platformName).toBe('Ashby')
-    expect(batches[0].portals).toHaveLength(10)
+    expect(batches[0]!.platformName).toBe('Ashby')
+    expect(batches[0]!.portals).toHaveLength(10)
   })
 
   it('returns all 12 Greenhouse portals for key "greenhouse"', () => {
     const batches = buildPlatformBatches(['greenhouse'])
     expect(batches).toHaveLength(1)
-    expect(batches[0].platformName).toBe('Greenhouse')
-    expect(batches[0].portals).toHaveLength(12)
+    expect(batches[0]!.platformName).toBe('Greenhouse')
+    expect(batches[0]!.portals).toHaveLength(12)
   })
 
   it('returns all 8 Lever portals for key "lever"', () => {
     const batches = buildPlatformBatches(['lever'])
     expect(batches).toHaveLength(1)
-    expect(batches[0].platformName).toBe('Lever')
-    expect(batches[0].portals).toHaveLength(8)
+    expect(batches[0]!.platformName).toBe('Lever')
+    expect(batches[0]!.portals).toHaveLength(8)
   })
 })
 
@@ -28,16 +28,16 @@ describe('buildPlatformBatches — backward compat with individual keys', () => 
   it('returns only Linear for "ashby-linear"', () => {
     const batches = buildPlatformBatches(['ashby-linear'])
     expect(batches).toHaveLength(1)
-    expect(batches[0].platformName).toBe('Ashby')
-    expect(batches[0].portals).toHaveLength(1)
-    expect(batches[0].portals[0].slug).toBe('linear')
+    expect(batches[0]!.platformName).toBe('Ashby')
+    expect(batches[0]!.portals).toHaveLength(1)
+    expect(batches[0]!.portals[0]!.slug).toBe('linear')
   })
 
   it('returns only Airbnb for "greenhouse-airbnb"', () => {
     const batches = buildPlatformBatches(['greenhouse-airbnb'])
     expect(batches).toHaveLength(1)
-    expect(batches[0].portals).toHaveLength(1)
-    expect(batches[0].portals[0].slug).toBe('airbnb')
+    expect(batches[0]!.portals).toHaveLength(1)
+    expect(batches[0]!.portals[0]!.slug).toBe('airbnb')
   })
 })
 
@@ -51,13 +51,13 @@ describe('buildPlatformBatches — mixed platform + company keys', () => {
 
     expect(ashbyBatch.portals).toHaveLength(10)
     expect(ghBatch.portals).toHaveLength(1)
-    expect(ghBatch.portals[0].slug).toBe('airbnb')
+    expect(ghBatch.portals[0]!.slug).toBe('airbnb')
   })
 
   it('de-dupes when "ashby" and "ashby-linear" are both present', () => {
     const batches = buildPlatformBatches(['ashby', 'ashby-linear'])
     expect(batches).toHaveLength(1)
-    expect(batches[0].portals).toHaveLength(10)
+    expect(batches[0]!.portals).toHaveLength(10)
   })
 
   it('handles all three platforms together', () => {

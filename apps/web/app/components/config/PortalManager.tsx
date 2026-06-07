@@ -11,6 +11,23 @@ type CustomPortal = {
   name: string
   url: string
   enabled: boolean
+  provider: string | null
+  api: string | null
+  notes: string | null
+}
+
+type AddPortalFields = {
+  name: string
+  url: string
+  provider: string | null
+  api: string | null
+  notes: string | null
+}
+
+type UpdateFields = {
+  provider: string | null
+  api: string | null
+  notes: string | null
 }
 
 type Props = {
@@ -30,11 +47,11 @@ export function PortalManager({ presetValue, onPresetChange }: Props) {
       .finally(() => setLoading(false))
   }, [])
 
-  const handleAdd = useCallback(async (name: string, url: string) => {
+  const handleAdd = useCallback(async (fields: AddPortalFields) => {
     const res = await fetch('/api/config/portals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, url }),
+      body: JSON.stringify(fields),
     })
     const { data, error } = await res.json()
     if (!res.ok) throw new Error(error ?? 'Failed to add portal')
@@ -55,6 +72,17 @@ export function PortalManager({ presetValue, onPresetChange }: Props) {
     await fetch(`/api/config/portals/${id}`, { method: 'DELETE' })
   }, [])
 
+  const handleUpdate = useCallback(async (id: string, fields: UpdateFields) => {
+    const res = await fetch(`/api/config/portals/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fields),
+    })
+    if (!res.ok) return
+    const { data } = await res.json()
+    setCustomPortals((prev) => prev.map((p) => (p.id === id ? { ...p, ...data } : p)))
+  }, [])
+
   return (
     <Stack gap={24}>
       <Stack gap={12}>
@@ -70,7 +98,7 @@ export function PortalManager({ presetValue, onPresetChange }: Props) {
           </Center>
         ) : (
           <Stack gap={12}>
-            <CustomPortalList portals={customPortals} onToggle={handleToggle} onDelete={handleDelete} />
+            <CustomPortalList portals={customPortals} onToggle={handleToggle} onDelete={handleDelete} onUpdate={handleUpdate} />
             <AddPortalForm onAdd={handleAdd} />
           </Stack>
         )}

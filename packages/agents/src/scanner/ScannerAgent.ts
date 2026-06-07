@@ -79,7 +79,7 @@ async function fetchAshby(slug: string, signal: AbortSignal): Promise<ScannedJob
     company: slug,
     role: p.title,
     url: p.externalLink ?? `https://jobs.ashbyhq.com/${slug}`,
-    location: p.locationName,
+    ...(p.locationName ? { location: p.locationName } : {}),
   }))
 }
 
@@ -103,7 +103,7 @@ async function fetchGreenhouse(slug: string, signal: AbortSignal): Promise<Scann
     company: slug,
     role: j.title,
     url: j.absolute_url ?? `https://boards.greenhouse.io/${slug}/jobs/${j.id}`,
-    location: j.location?.name,
+    ...(j.location?.name ? { location: j.location.name } : {}),
   }))
 }
 
@@ -123,7 +123,7 @@ async function fetchLever(slug: string, signal: AbortSignal): Promise<ScannedJob
     company: slug,
     role: p.text,
     url: p.hostedUrl ?? `https://jobs.lever.co/${slug}`,
-    location: p.categories?.location,
+    ...(p.categories?.location ? { location: p.categories.location } : {}),
   }))
 }
 
@@ -220,9 +220,22 @@ interface CustomPortalRecord {
   name: string
   url: string
   enabled: boolean
+  provider: string | null
+  api: string | null
+  notes: string | null
 }
 
-function buildCustomBatches(portals: CustomPortalRecord[]): {
+// Extract last non-empty path segment — handles deep API paths like /v1/boards/<slug>
+function extractLastSlugFromUrl(url: string): string | null {
+  try {
+    const segments = new URL(url).pathname.split('/').filter(Boolean)
+    return segments.at(-1) ?? null
+  } catch {
+    return null
+  }
+}
+
+export function buildCustomBatches(portals: CustomPortalRecord[]): {
   scannable: PlatformBatch[]
   skipped: CustomPortalRecord[]
 } {
@@ -230,12 +243,14 @@ function buildCustomBatches(portals: CustomPortalRecord[]): {
   const skipped: CustomPortalRecord[] = []
 
   for (const portal of portals) {
-    const platform = detectPlatformFromUrl(portal.url)
+    const platform = portal.provider ?? detectPlatformFromUrl(portal.url)
     if (platform === 'Unknown') {
       skipped.push(portal)
       continue
     }
-    const slug = extractSlugFromUrl(portal.url)
+    const slug = portal.api
+      ? extractLastSlugFromUrl(portal.api)
+      : extractSlugFromUrl(portal.url)
     if (!slug) {
       skipped.push(portal)
       continue
@@ -279,7 +294,7 @@ export class ScannerAgent extends BaseAgent {
     if (skippedPortals.length > 0) {
       yield customEvent('scan-progress-skipped', {
         portals: skippedPortals.map((p) => ({ name: p.name, url: p.url })),
-        reason: 'No supported ATS detected for these URLs',
+        reason: 'No ATS detected — set a provider override to enable scanning',
       })
     }
 
