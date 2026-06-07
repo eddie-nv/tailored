@@ -8,6 +8,17 @@ const CreateSchema = z.object({
     .string()
     .url()
     .refine((u) => u.startsWith('https://'), { message: 'URL must use https://' }),
+  provider: z
+    .enum(['Ashby', 'Greenhouse', 'Lever', 'Workable', 'SmartRecruiters', 'Recruitee'])
+    .nullable()
+    .optional(),
+  api: z
+    .string()
+    .url()
+    .refine((u) => u.startsWith('https://'), { message: 'API URL must use https://' })
+    .nullable()
+    .optional(),
+  notes: z.string().max(200).nullable().optional(),
 })
 
 export async function GET() {

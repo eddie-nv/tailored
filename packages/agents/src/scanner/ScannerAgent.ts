@@ -13,6 +13,7 @@ import {
   parseLocationFilter,
 } from './filters'
 import type { StoredTitleFilter, StoredLocationFilter } from './filters'
+import { runSearchQuery, checkUrlLive, isValidHttpsUrl } from './searchQuery'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -21,6 +22,7 @@ interface ScannedJob {
   role: string
   url: string
   location?: string
+  source?: string
 }
 
 interface PlatformBatch {
@@ -79,7 +81,7 @@ async function fetchAshby(slug: string, signal: AbortSignal): Promise<ScannedJob
     company: slug,
     role: p.title,
     url: p.externalLink ?? `https://jobs.ashbyhq.com/${slug}`,
-    location: p.locationName,
+    ...(p.locationName ? { location: p.locationName } : {}),
   }))
 }
 
@@ -103,7 +105,7 @@ async function fetchGreenhouse(slug: string, signal: AbortSignal): Promise<Scann
     company: slug,
     role: j.title,
     url: j.absolute_url ?? `https://boards.greenhouse.io/${slug}/jobs/${j.id}`,
-    location: j.location?.name,
+    ...(j.location?.name ? { location: j.location.name } : {}),
   }))
 }
 
@@ -123,24 +125,35 @@ async function fetchLever(slug: string, signal: AbortSignal): Promise<ScannedJob
     company: slug,
     role: p.text,
     url: p.hostedUrl ?? `https://jobs.lever.co/${slug}`,
-    location: p.categories?.location,
+    ...(p.categories?.location ? { location: p.categories.location } : {}),
   }))
 }
 
 // ── Platform Batch Builder ────────────────────────────────────────────────────
 
-function buildPlatformBatches(enabledPortalKeys: string[]): PlatformBatch[] {
+// Platforms with a supported public API that the scanner can query.
+const SCANNABLE_PLATFORM_KEYS = new Set(['ashby', 'greenhouse', 'lever'])
+
+export function buildPlatformBatches(enabledPortalKeys: string[]): PlatformBatch[] {
   const batches: Map<string, PlatformBatch> = new Map()
 
   for (const group of PORTAL_GROUPS) {
-    for (const portal of group.portals) {
-      if (!enabledPortalKeys.includes(portal.key)) continue
+    const platformKey = group.name.toLowerCase()
+    // Platform-level key ("ashby") expands to all portals in that group.
+    const platformEnabled =
+      SCANNABLE_PLATFORM_KEYS.has(platformKey) && enabledPortalKeys.includes(platformKey)
 
-      const existing = batches.get(group.name)
+    for (const portal of group.portals) {
+      if (!platformEnabled && !enabledPortalKeys.includes(portal.key)) continue
+
       const slug = portal.key.replace(/^[^-]+-/, '')
+      const existing = batches.get(group.name)
 
       if (existing) {
-        existing.portals.push({ key: portal.key, slug })
+        // De-dupe: skip if this portal was already added via a platform-level key.
+        if (!existing.portals.some((p) => p.key === portal.key)) {
+          existing.portals.push({ key: portal.key, slug })
+        }
       } else {
         batches.set(group.name, {
           platformName: group.name,
@@ -209,9 +222,22 @@ interface CustomPortalRecord {
   name: string
   url: string
   enabled: boolean
+  provider: string | null
+  api: string | null
+  notes: string | null
 }
 
-function buildCustomBatches(portals: CustomPortalRecord[]): {
+// Extract last non-empty path segment — handles deep API paths like /v1/boards/<slug>
+function extractLastSlugFromUrl(url: string): string | null {
+  try {
+    const segments = new URL(url).pathname.split('/').filter(Boolean)
+    return segments.at(-1) ?? null
+  } catch {
+    return null
+  }
+}
+
+export function buildCustomBatches(portals: CustomPortalRecord[]): {
   scannable: PlatformBatch[]
   skipped: CustomPortalRecord[]
 } {
@@ -219,12 +245,14 @@ function buildCustomBatches(portals: CustomPortalRecord[]): {
   const skipped: CustomPortalRecord[] = []
 
   for (const portal of portals) {
-    const platform = detectPlatformFromUrl(portal.url)
+    const platform = portal.provider ?? detectPlatformFromUrl(portal.url)
     if (platform === 'Unknown') {
       skipped.push(portal)
       continue
     }
-    const slug = extractSlugFromUrl(portal.url)
+    const slug = portal.api
+      ? extractLastSlugFromUrl(portal.api)
+      : extractSlugFromUrl(portal.url)
     if (!slug) {
       skipped.push(portal)
       continue
@@ -268,12 +296,13 @@ export class ScannerAgent extends BaseAgent {
     if (skippedPortals.length > 0) {
       yield customEvent('scan-progress-skipped', {
         portals: skippedPortals.map((p) => ({ name: p.name, url: p.url })),
-        reason: 'No supported ATS detected for these URLs',
+        reason: 'No ATS detected — set a provider override to enable scanning',
       })
     }
 
     const batches = [...buildPlatformBatches(enabledPortalKeys), ...customBatches]
-    const total = batches.length
+    const enabledSearchQueries = await prisma.searchQuery.findMany({ where: { enabled: true } })
+    const total = batches.length + enabledSearchQueries.length
 
     // Emit init progress
     yield customEvent('scan-progress-init', { total, done: 0, found: 0 })
@@ -300,6 +329,38 @@ export class ScannerAgent extends BaseAgent {
       yield stepFinished(`scanning-${batch.platformName}`)
     }
 
+    // Level 3 — web search via Claude tool_use
+    const positiveTerms = [...titleFilter.derived, ...titleFilter.custom]
+
+    for (const sq of enabledSearchQueries) {
+      if (signal.aborted) break
+
+      yield stepStarted(`search-${sq.name}`)
+
+      const hits = await runSearchQuery(sq.query, sq.name, signal)
+
+      for (const hit of hits) {
+        if (!isValidHttpsUrl(hit.url)) continue
+        if (existingUrls.has(hit.url)) continue
+        if (!matchesTitleFilter(hit.title, positiveTerms, titleFilter.negative)) continue
+
+        const isLive = await checkUrlLive(hit.url, signal)
+        if (!isLive) continue
+
+        existingUrls.add(hit.url)
+        allNewJobs.push({ company: hit.company, role: hit.title, url: hit.url, source: 'search' })
+      }
+
+      done += 1
+      yield customEvent('scan-progress-update', {
+        done,
+        found: allNewJobs.length,
+        platform: `search:${sq.name}`,
+      })
+
+      yield stepFinished(`search-${sq.name}`)
+    }
+
     // Sort seniority-boosted jobs first so they appear at the top of the results
     allNewJobs.sort((a, b) => {
       const aBoost = isSeniorityBoosted(a.role, titleFilter.seniorityBoost) ? 0 : 1
@@ -313,7 +374,7 @@ export class ScannerAgent extends BaseAgent {
       company: j.company,
       role: j.role,
       url: j.url,
-      source: 'scan' as const,
+      source: j.source ?? 'scan',
       status: 'new',
     }))
 

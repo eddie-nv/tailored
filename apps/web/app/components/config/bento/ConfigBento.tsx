@@ -11,7 +11,9 @@ import { TargetRolesTile } from './tiles/TargetRolesTile'
 import { CompensationTile } from './tiles/CompensationTile'
 import { WorkPrefsTile } from './tiles/WorkPrefsTile'
 import { CvOutputTile } from './tiles/CvOutputTile'
-import { DiscoveryTile } from './tiles/DiscoveryTile'
+import { BroadDiscoveryTile } from './tiles/BroadDiscoveryTile'
+import { CompanyWatchlistTile } from './tiles/CompanyWatchlistTile'
+import { DiscoveryQueriesTile } from './tiles/DiscoveryQueriesTile'
 import { SearchFiltersTile } from './tiles/SearchFiltersTile'
 import { LocationFilterTile } from './tiles/LocationFilterTile'
 import { ProofPointsTile } from './tiles/ProofPointsTile'
@@ -77,9 +79,11 @@ export function ConfigBento() {
                     )}
                     {id === 'scanner' && (
                       <>
-                        <DiscoveryTile />
+                        <BroadDiscoveryTile />
                         <SearchFiltersTile />
+                        <CompanyWatchlistTile />
                         <LocationFilterTile />
+                        <DiscoveryQueriesTile />
                       </>
                     )}
                     {id === 'cv' && (
