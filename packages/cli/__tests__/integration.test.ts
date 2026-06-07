@@ -53,7 +53,7 @@ beforeAll(() => {
     `"${prismaBin}" db push --schema="${schemaPath}" --skip-generate`,
     { env: { ...process.env, DATABASE_URL: TEST_DB_URL }, stdio: 'pipe' },
   )
-})
+}, 30000)
 
 afterAll(async () => {
   await db.$disconnect()

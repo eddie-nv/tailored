@@ -104,5 +104,16 @@ model CustomPortal {
   name      String
   url       String
   enabled   Boolean  @default(true)
+  provider  String?  // "Ashby"|"Greenhouse"|"Lever"|"Workable"|"SmartRecruiters"|"Recruitee"
+  api       String?  // alternate API endpoint URL
+  notes     String?  // user-facing context shown in the tile
+  createdAt DateTime @default(now())
+}
+
+model SearchQuery {
+  id        String   @id @default(cuid())
+  name      String
+  query     String
+  enabled   Boolean  @default(true)
   createdAt DateTime @default(now())
 }
