@@ -129,18 +129,29 @@ async function fetchLever(slug: string, signal: AbortSignal): Promise<ScannedJob
 
 // ── Platform Batch Builder ────────────────────────────────────────────────────
 
-function buildPlatformBatches(enabledPortalKeys: string[]): PlatformBatch[] {
+// Platforms with a supported public API that the scanner can query.
+const SCANNABLE_PLATFORM_KEYS = new Set(['ashby', 'greenhouse', 'lever'])
+
+export function buildPlatformBatches(enabledPortalKeys: string[]): PlatformBatch[] {
   const batches: Map<string, PlatformBatch> = new Map()
 
   for (const group of PORTAL_GROUPS) {
-    for (const portal of group.portals) {
-      if (!enabledPortalKeys.includes(portal.key)) continue
+    const platformKey = group.name.toLowerCase()
+    // Platform-level key ("ashby") expands to all portals in that group.
+    const platformEnabled =
+      SCANNABLE_PLATFORM_KEYS.has(platformKey) && enabledPortalKeys.includes(platformKey)
 
-      const existing = batches.get(group.name)
+    for (const portal of group.portals) {
+      if (!platformEnabled && !enabledPortalKeys.includes(portal.key)) continue
+
       const slug = portal.key.replace(/^[^-]+-/, '')
+      const existing = batches.get(group.name)
 
       if (existing) {
-        existing.portals.push({ key: portal.key, slug })
+        // De-dupe: skip if this portal was already added via a platform-level key.
+        if (!existing.portals.some((p) => p.key === portal.key)) {
+          existing.portals.push({ key: portal.key, slug })
+        }
       } else {
         batches.set(group.name, {
           platformName: group.name,
