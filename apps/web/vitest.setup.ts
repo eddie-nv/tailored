@@ -15,3 +15,10 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 })
+
+// Mantine Modal/Overlay/Transition uses ResizeObserver — jsdom doesn't implement it
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
