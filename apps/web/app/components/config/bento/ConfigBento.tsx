@@ -1,7 +1,8 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Tabs } from '@mantine/core'
+import { useState } from 'react'
+import { Accordion } from '@mantine/core'
 import { User, MagnifyingGlass, FilePdf } from '@phosphor-icons/react'
 import { RoleTargetsProvider } from '../../../providers/RoleTargetsProvider'
 import { IdentityTile } from './tiles/IdentityTile'
@@ -24,55 +25,76 @@ const SECTIONS: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: 'cv', label: 'CV', icon: <FilePdf size={16} /> },
 ]
 
+function parseOpen(raw: string | null): Section[] {
+  if (!raw) return ['profile']
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s): s is Section => ['profile', 'scanner', 'cv'].includes(s))
+}
+
 export function ConfigBento() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const activeSection = (searchParams.get('section') as Section | null) ?? 'profile'
+  const [openSections, setOpenSections] = useState<Section[]>(() =>
+    parseOpen(searchParams.get('open')),
+  )
 
-  function handleTabChange(value: string | null) {
-    if (!value) return
+  function handleChange(values: string[]) {
+    const next = values.filter((v): v is Section =>
+      ['profile', 'scanner', 'cv'].includes(v),
+    )
+    setOpenSections(next)
     const params = new URLSearchParams(searchParams.toString())
-    params.set('section', value)
+    if (next.length === 0) {
+      params.delete('open')
+    } else {
+      params.set('open', next.join(','))
+    }
     router.push(`?${params.toString()}`, { scroll: false })
   }
 
   return (
     <RoleTargetsProvider>
-      <Tabs value={activeSection} onChange={handleTabChange} variant="pills" keepMounted={false}>
-        <Tabs.List mb="xl">
-          {SECTIONS.map(({ id, label, icon }) => (
-            <Tabs.Tab key={id} value={id} leftSection={icon}>
-              {label}
-            </Tabs.Tab>
-          ))}
-        </Tabs.List>
-
-        <Tabs.Panel value="profile">
-          <div className="bento-grid">
-            <IdentityTile />
-            <NarrativeTile />
-            <TargetRolesTile />
-            <CompensationTile />
-            <WorkPrefsTile />
-            <ProofPointsTile />
-          </div>
-        </Tabs.Panel>
-
-        <Tabs.Panel value="scanner">
-          <div className="bento-grid">
-            <DiscoveryTile />
-            <SearchFiltersTile />
-            <LocationFilterTile />
-          </div>
-        </Tabs.Panel>
-
-        <Tabs.Panel value="cv">
-          <div className="bento-grid">
-            <CvOutputTile />
-            <PdfGateTile />
-          </div>
-        </Tabs.Panel>
-      </Tabs>
+      <Accordion multiple value={openSections} onChange={handleChange}>
+        {SECTIONS.map(({ id, label, icon }) => {
+          const isOpen = openSections.includes(id)
+          return (
+            <Accordion.Item key={id} value={id}>
+              <Accordion.Control icon={icon}>{label}</Accordion.Control>
+              <Accordion.Panel>
+                {isOpen && (
+                  <div className="bento-grid">
+                    {id === 'profile' && (
+                      <>
+                        <IdentityTile />
+                        <NarrativeTile />
+                        <TargetRolesTile />
+                        <CompensationTile />
+                        <WorkPrefsTile />
+                        <ProofPointsTile />
+                      </>
+                    )}
+                    {id === 'scanner' && (
+                      <>
+                        <DiscoveryTile />
+                        <SearchFiltersTile />
+                        <LocationFilterTile />
+                      </>
+                    )}
+                    {id === 'cv' && (
+                      <>
+                        <CvOutputTile />
+                        <PdfGateTile />
+                      </>
+                    )}
+                  </div>
+                )}
+              </Accordion.Panel>
+            </Accordion.Item>
+          )
+        })}
+      </Accordion>
     </RoleTargetsProvider>
   )
 }
