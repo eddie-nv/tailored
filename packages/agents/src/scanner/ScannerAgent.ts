@@ -13,6 +13,7 @@ import {
   parseLocationFilter,
 } from './filters'
 import type { StoredTitleFilter, StoredLocationFilter } from './filters'
+import { runSearchQuery, checkUrlLive, isValidHttpsUrl } from './searchQuery'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -21,6 +22,7 @@ interface ScannedJob {
   role: string
   url: string
   location?: string
+  source?: string
 }
 
 interface PlatformBatch {
@@ -299,7 +301,8 @@ export class ScannerAgent extends BaseAgent {
     }
 
     const batches = [...buildPlatformBatches(enabledPortalKeys), ...customBatches]
-    const total = batches.length
+    const enabledSearchQueries = await prisma.searchQuery.findMany({ where: { enabled: true } })
+    const total = batches.length + enabledSearchQueries.length
 
     // Emit init progress
     yield customEvent('scan-progress-init', { total, done: 0, found: 0 })
@@ -326,6 +329,38 @@ export class ScannerAgent extends BaseAgent {
       yield stepFinished(`scanning-${batch.platformName}`)
     }
 
+    // Level 3 — web search via Claude tool_use
+    const positiveTerms = [...titleFilter.derived, ...titleFilter.custom]
+
+    for (const sq of enabledSearchQueries) {
+      if (signal.aborted) break
+
+      yield stepStarted(`search-${sq.name}`)
+
+      const hits = await runSearchQuery(sq.query, sq.name, signal)
+
+      for (const hit of hits) {
+        if (!isValidHttpsUrl(hit.url)) continue
+        if (existingUrls.has(hit.url)) continue
+        if (!matchesTitleFilter(hit.title, positiveTerms, titleFilter.negative)) continue
+
+        const isLive = await checkUrlLive(hit.url, signal)
+        if (!isLive) continue
+
+        existingUrls.add(hit.url)
+        allNewJobs.push({ company: hit.company, role: hit.title, url: hit.url, source: 'search' })
+      }
+
+      done += 1
+      yield customEvent('scan-progress-update', {
+        done,
+        found: allNewJobs.length,
+        platform: `search:${sq.name}`,
+      })
+
+      yield stepFinished(`search-${sq.name}`)
+    }
+
     // Sort seniority-boosted jobs first so they appear at the top of the results
     allNewJobs.sort((a, b) => {
       const aBoost = isSeniorityBoosted(a.role, titleFilter.seniorityBoost) ? 0 : 1
@@ -339,7 +374,7 @@ export class ScannerAgent extends BaseAgent {
       company: j.company,
       role: j.role,
       url: j.url,
-      source: 'scan' as const,
+      source: j.source ?? 'scan',
       status: 'new',
     }))
 
