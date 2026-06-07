@@ -6,7 +6,8 @@ import { chromium } from 'playwright'
 import { mkdirSync, writeFileSync } from 'fs'
 import { join, resolve } from 'path'
 import { BaseAgent } from '../shared/base-agent'
-import { loadAppState } from '../shared/state'
+import { loadAppState, parseProofPoints } from '../shared/state'
+import type { ProofPoint } from '../shared/state'
 import { RESUME_TEMPLATE_HTML } from './resume-template'
 
 function stepStarted(stepName: string): BaseEvent {
@@ -23,6 +24,12 @@ function getOutputDir(): string {
     return resolve(envDir)
   }
   return resolve(process.cwd(), 'apps/web/public/resumes')
+}
+
+function formatProofPoints(points: ProofPoint[]): string {
+  if (points.length === 0) return ''
+  const lines = points.map((p) => `- ${p.name}: ${p.heroMetric}${p.url ? ` (${p.url})` : ''}`)
+  return `\n\nProof points (quantified achievements — surface these in the optimized CV):\n${lines.join('\n')}`
 }
 
 /**
@@ -123,6 +130,7 @@ export class CVAgent extends BaseAgent {
     const resumePrefs = appState.resumePrefs
     const cv = profile?.cv ?? ''
     const evalReport = job.evalReport ?? ''
+    const proofPoints = parseProofPoints(profile)
 
     // ── Step 1: Keyword Injection ──────────────────────────────────────────
     yield stepStarted('keyword-injection')
@@ -146,7 +154,7 @@ Keywords to emphasize: ${resumePrefs?.keywords ? JSON.stringify(resumePrefs.keyw
         messages: [
           {
             role: 'user',
-            content: `Candidate CV:\n\n${cv}\n\n---\n\nJob Evaluation Report (extract keywords and themes):\n\n${evalReport.slice(0, 4000)}\n\n---\n\nTarget role: ${job.role} at ${job.company} (${job.archetype ?? 'unknown archetype'})`,
+            content: `Candidate CV:\n\n${cv}${formatProofPoints(proofPoints)}\n\n---\n\nJob Evaluation Report (extract keywords and themes):\n\n${evalReport.slice(0, 4000)}\n\n---\n\nTarget role: ${job.role} at ${job.company} (${job.archetype ?? 'unknown archetype'})`,
           },
         ],
       },
