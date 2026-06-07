@@ -67,7 +67,7 @@ function QueryRow({
       component="li"
       withBorder
       p="8px 12px"
-      bg="white"
+      bg="var(--mantine-color-body)"
       radius="sm"
       style={{ opacity: query.enabled ? 1 : 0.6, transition: 'opacity 150ms' }}
     >

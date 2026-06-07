@@ -156,7 +156,7 @@ export function DiscoveryQueriesTile() {
               color="gray"
               onClick={() => setPresetsOpen(true)}
             >
-              📚 Presets
+              Presets
             </Button>
           </Group>
         </Group>
@@ -214,7 +214,7 @@ export function DiscoveryQueriesTile() {
                       withBorder
                       p="10px 14px"
                       radius="sm"
-                      bg="white"
+                      bg="var(--mantine-color-body)"
                     >
                       <Group justify="space-between" wrap="nowrap" gap={12}>
                         <Box style={{ flex: 1, minWidth: 0 }}>
