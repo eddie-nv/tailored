@@ -217,13 +217,15 @@ async function scanPlatformBatch(
 
 // ── Custom Portal Batch Builder ───────────────────────────────────────────────
 
-interface CustomPortalRecord {
+export interface CustomPortalRecord {
   id: string
   name: string
   url: string
   enabled: boolean
   provider: string | null
   api: string | null
+  method: string
+  query: string | null
   notes: string | null
 }
 
@@ -239,22 +241,35 @@ function extractLastSlugFromUrl(url: string): string | null {
 
 export function buildCustomBatches(portals: CustomPortalRecord[]): {
   scannable: PlatformBatch[]
-  skipped: CustomPortalRecord[]
+  websearch: CustomPortalRecord[]
+  zeroMatch: CustomPortalRecord[]
 } {
   const batchMap = new Map<string, PlatformBatch>()
-  const skipped: CustomPortalRecord[] = []
+  const websearch: CustomPortalRecord[] = []
+  const zeroMatch: CustomPortalRecord[] = []
 
   for (const portal of portals) {
+    // Explicit websearch path
+    if (portal.method === 'websearch') {
+      if (portal.query && portal.query.trim()) {
+        websearch.push(portal)
+      } else {
+        zeroMatch.push(portal)
+      }
+      continue
+    }
+
+    // Auto path — try ATS detection
     const platform = portal.provider ?? detectPlatformFromUrl(portal.url)
     if (platform === 'Unknown') {
-      skipped.push(portal)
+      zeroMatch.push(portal)
       continue
     }
     const slug = portal.api
       ? extractLastSlugFromUrl(portal.api)
       : extractSlugFromUrl(portal.url)
     if (!slug) {
-      skipped.push(portal)
+      zeroMatch.push(portal)
       continue
     }
     const key = `custom-${platform}`
@@ -266,7 +281,47 @@ export function buildCustomBatches(portals: CustomPortalRecord[]): {
     }
   }
 
-  return { scannable: Array.from(batchMap.values()), skipped }
+  return { scannable: Array.from(batchMap.values()), websearch, zeroMatch }
+}
+
+// ── Web Search Target Runner ──────────────────────────────────────────────────
+
+type SearchQueryFn = (
+  query: string,
+  name: string,
+  signal: AbortSignal,
+) => Promise<import('./searchQuery').SearchHit[]>
+
+export async function runWebSearchTarget(
+  portal: CustomPortalRecord,
+  existingUrls: Set<string>,
+  titleFilter: StoredTitleFilter,
+  locationFilter: StoredLocationFilter,
+  signal: AbortSignal,
+  searchFn: SearchQueryFn = runSearchQuery,
+): Promise<ScannedJob[]> {
+  const positiveTerms = [...titleFilter.derived, ...titleFilter.custom]
+  try {
+    const hits = await searchFn(portal.query!, portal.name, signal)
+    const jobs: ScannedJob[] = []
+    for (const hit of hits) {
+      if (!isValidHttpsUrl(hit.url)) continue
+      if (existingUrls.has(hit.url)) continue
+      if (!matchesTitleFilter(hit.title, positiveTerms, titleFilter.negative)) continue
+      if (!matchesLocationFilter(hit.location, locationFilter)) continue
+      existingUrls.add(hit.url)
+      jobs.push({
+        company: hit.company,
+        role: hit.title,
+        url: hit.url,
+        ...(hit.location ? { location: hit.location } : {}),
+        source: `search:${portal.name}`,
+      })
+    }
+    return jobs
+  } catch {
+    return []
+  }
 }
 
 // ── Agent ─────────────────────────────────────────────────────────────────────
@@ -291,18 +346,11 @@ export class ScannerAgent extends BaseAgent {
     const locationFilter = parseLocationFilter(discoveryPrefs?.locationFilter ?? null)
 
     const rawCustomPortals = await prisma.customPortal.findMany({ where: { enabled: true } })
-    const { scannable: customBatches, skipped: skippedPortals } = buildCustomBatches(rawCustomPortals)
-
-    if (skippedPortals.length > 0) {
-      yield customEvent('scan-progress-skipped', {
-        portals: skippedPortals.map((p) => ({ name: p.name, url: p.url })),
-        reason: 'No ATS detected — set a provider override to enable scanning',
-      })
-    }
+    const { scannable: customBatches, websearch: websearchPortals, zeroMatch: zeroMatchPortals } = buildCustomBatches(rawCustomPortals)
 
     const batches = [...buildPlatformBatches(enabledPortalKeys), ...customBatches]
     const enabledSearchQueries = await prisma.searchQuery.findMany({ where: { enabled: true } })
-    const total = batches.length + enabledSearchQueries.length
+    const total = batches.length + websearchPortals.length + enabledSearchQueries.length + zeroMatchPortals.length
 
     // Emit init progress
     yield customEvent('scan-progress-init', { total, done: 0, found: 0 })
@@ -329,7 +377,39 @@ export class ScannerAgent extends BaseAgent {
       yield stepFinished(`scanning-${batch.platformName}`)
     }
 
-    // Level 3 — web search via Claude tool_use
+    // Custom websearch targets
+    for (const portal of websearchPortals) {
+      if (signal.aborted) break
+
+      yield stepStarted(`search-target-${portal.name}`)
+
+      const found = await runWebSearchTarget(portal, existingUrls, titleFilter, locationFilter, signal)
+      allNewJobs.push(...found)
+      done += 1
+
+      yield customEvent('scan-progress-update', {
+        done,
+        found: allNewJobs.length,
+        platform: `search:${portal.name}`,
+      })
+
+      yield stepFinished(`search-target-${portal.name}`)
+    }
+
+    // Portals with no detectable ATS and no websearch — emit count=0 so user sees them checked
+    for (const portal of zeroMatchPortals) {
+      if (signal.aborted) break
+      done += 1
+      yield customEvent('scan-progress-update', {
+        done,
+        found: allNewJobs.length,
+        platform: portal.name,
+        count: 0,
+        note: portal.method === 'websearch' ? 'No query set' : 'No ATS detected',
+      })
+    }
+
+    // Level 3 — web search via Claude tool_use (DiscoveryQueries)
     const positiveTerms = [...titleFilter.derived, ...titleFilter.custom]
 
     for (const sq of enabledSearchQueries) {
