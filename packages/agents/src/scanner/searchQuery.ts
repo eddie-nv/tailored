@@ -7,6 +7,7 @@ export interface SearchHit {
   url: string
   company: string
   queryName: string
+  location?: string
 }
 
 export function isValidHttpsUrl(url: string): boolean {

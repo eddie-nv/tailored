@@ -8,6 +8,8 @@ type PortalInput = {
   enabled: boolean
   provider: string | null
   api: string | null
+  method: string
+  query: string | null
   notes: string | null
 }
 
@@ -19,6 +21,8 @@ function makePortal(overrides: Partial<PortalInput> = {}): PortalInput {
     enabled: true,
     provider: null,
     api: null,
+    method: 'auto',
+    query: null,
     notes: null,
     ...overrides,
   }
@@ -31,17 +35,17 @@ describe('buildCustomBatches — provider override', () => {
       url: 'https://careers.example.com',
       api: 'https://boards-api.greenhouse.io/v1/boards/example-co',
     })
-    const { scannable, skipped } = buildCustomBatches([portal])
-    expect(skipped).toHaveLength(0)
+    const { scannable, zeroMatch } = buildCustomBatches([portal])
+    expect(zeroMatch).toHaveLength(0)
     expect(scannable).toHaveLength(1)
     expect(scannable[0]!.platformName).toBe('Greenhouse')
     expect(scannable[0]!.portals[0]!.slug).toBe('example-co')
   })
 
-  it('lands in skipped when provider is null and URL is unrecognised', () => {
+  it('lands in zeroMatch when provider is null and URL is unrecognised', () => {
     const portal = makePortal({ provider: null, url: 'https://careers.example.com' })
-    const { scannable, skipped } = buildCustomBatches([portal])
-    expect(skipped).toHaveLength(1)
+    const { scannable, zeroMatch } = buildCustomBatches([portal])
+    expect(zeroMatch).toHaveLength(1)
     expect(scannable).toHaveLength(0)
   })
 
@@ -51,8 +55,8 @@ describe('buildCustomBatches — provider override', () => {
       url: 'https://jobs.ashbyhq.com/anthropic',
       api: null,
     })
-    const { scannable, skipped } = buildCustomBatches([portal])
-    expect(skipped).toHaveLength(0)
+    const { scannable, zeroMatch } = buildCustomBatches([portal])
+    expect(zeroMatch).toHaveLength(0)
     expect(scannable[0]!.platformName).toBe('Ashby')
     expect(scannable[0]!.portals[0]!.slug).toBe('anthropic')
   })
@@ -67,10 +71,10 @@ describe('buildCustomBatches — provider override', () => {
     expect(scannable[0]!.portals[0]!.slug).toBe('anthropic')
   })
 
-  it('portal with no provider and no recognisable URL pattern is skipped', () => {
+  it('portal with no provider and no recognisable URL pattern lands in zeroMatch', () => {
     const portal = makePortal({ url: 'https://niche-company.io/careers' })
-    const { skipped } = buildCustomBatches([portal])
-    expect(skipped).toHaveLength(1)
+    const { zeroMatch } = buildCustomBatches([portal])
+    expect(zeroMatch).toHaveLength(1)
   })
 
   it('groups multiple portals by platform', () => {
