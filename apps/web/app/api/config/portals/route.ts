@@ -8,6 +8,8 @@ const CreateSchema = z.object({
     .string()
     .url()
     .refine((u) => u.startsWith('https://'), { message: 'URL must use https://' }),
+  method: z.enum(['auto', 'websearch']).default('auto'),
+  query: z.string().max(500).nullable().optional(),
   provider: z
     .enum(['Ashby', 'Greenhouse', 'Lever', 'Workable', 'SmartRecruiters', 'Recruitee'])
     .nullable()
@@ -49,7 +51,8 @@ export async function POST(req: Request) {
   try {
     const portal = await prisma.customPortal.create({ data: parsed.data })
     return NextResponse.json({ success: true, data: portal }, { status: 201 })
-  } catch {
+  } catch (err) {
+    console.error('[portals POST]', err)
     return NextResponse.json(
       { success: false, error: 'Failed to create custom portal' },
       { status: 500 },

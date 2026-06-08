@@ -18,6 +18,8 @@ const mockPortal = {
   enabled: true,
   provider: null,
   api: null,
+  method: 'auto',
+  query: null,
   notes: null,
   createdAt: new Date(),
 }
@@ -110,6 +112,75 @@ describe('PATCH /api/config/portals/[id]', () => {
     const res = await PATCH(req, { params: Promise.resolve({ id: 'portal-1' }) })
 
     expect(res.status).toBe(200)
+  })
+
+  it('updates method from auto to websearch with a query', async () => {
+    vi.mocked(prisma.customPortal.update).mockResolvedValueOnce({
+      ...mockPortal,
+      method: 'websearch',
+      query: 'site:acme.com/careers engineer',
+    })
+    const req = makePatchRequest('portal-1', {
+      method: 'websearch',
+      query: 'site:acme.com/careers engineer',
+    })
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'portal-1' }) })
+    const json = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(json.data).toMatchObject({ method: 'websearch', query: 'site:acme.com/careers engineer' })
+    expect(vi.mocked(prisma.customPortal.update)).toHaveBeenCalledWith({
+      where: { id: 'portal-1' },
+      data: expect.objectContaining({ method: 'websearch', query: 'site:acme.com/careers engineer' }),
+    })
+  })
+
+  it('updates query string on existing websearch entry', async () => {
+    vi.mocked(prisma.customPortal.update).mockResolvedValueOnce({
+      ...mockPortal,
+      method: 'websearch',
+      query: 'new query string',
+    })
+    const req = makePatchRequest('portal-1', { query: 'new query string' })
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'portal-1' }) })
+
+    expect(res.status).toBe(200)
+    expect(vi.mocked(prisma.customPortal.update)).toHaveBeenCalledWith({
+      where: { id: 'portal-1' },
+      data: expect.objectContaining({ query: 'new query string' }),
+    })
+  })
+
+  it('clears query to null on a method=auto entry', async () => {
+    vi.mocked(prisma.customPortal.update).mockResolvedValueOnce({
+      ...mockPortal,
+      method: 'auto',
+      query: null,
+    })
+    const req = makePatchRequest('portal-1', { method: 'auto', query: null })
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'portal-1' }) })
+
+    expect(res.status).toBe(200)
+    expect(vi.mocked(prisma.customPortal.update)).toHaveBeenCalledWith({
+      where: { id: 'portal-1' },
+      data: expect.objectContaining({ method: 'auto', query: null }),
+    })
+  })
+
+  it('rejects unknown method value with 400', async () => {
+    const req = makePatchRequest('portal-1', { method: 'scrape' })
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'portal-1' }) })
+
+    expect(res.status).toBe(400)
+    expect(vi.mocked(prisma.customPortal.update)).not.toHaveBeenCalled()
+  })
+
+  it('rejects query longer than 500 chars with 400', async () => {
+    const req = makePatchRequest('portal-1', { query: 'a'.repeat(501) })
+    const res = await PATCH(req, { params: Promise.resolve({ id: 'portal-1' }) })
+
+    expect(res.status).toBe(400)
+    expect(vi.mocked(prisma.customPortal.update)).not.toHaveBeenCalled()
   })
 
   it('rejects unknown fields with 400', async () => {

@@ -106,6 +106,8 @@ model CustomPortal {
   enabled   Boolean  @default(true)
   provider  String?  // "Ashby"|"Greenhouse"|"Lever"|"Workable"|"SmartRecruiters"|"Recruitee"
   api       String?  // alternate API endpoint URL
+  method    String   @default("auto")  // "auto" | "websearch"
+  query     String?  // search query; only used when method = "websearch"
   notes     String?  // user-facing context shown in the tile
   createdAt DateTime @default(now())
 }

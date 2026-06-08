@@ -6,6 +6,8 @@ import { isPrismaNotFound } from '@/app/lib/prisma-errors'
 const PatchSchema = z
   .object({
     enabled: z.boolean().optional(),
+    method: z.enum(['auto', 'websearch']).optional(),
+    query: z.string().max(500).nullable().optional(),
     provider: z
       .enum(['Ashby', 'Greenhouse', 'Lever', 'Workable', 'SmartRecruiters', 'Recruitee'])
       .nullable()
