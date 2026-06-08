@@ -15,7 +15,6 @@ import { BroadDiscoveryTile } from './tiles/BroadDiscoveryTile'
 import { CompanyWatchlistTile } from './tiles/CompanyWatchlistTile'
 import { DiscoveryQueriesTile } from './tiles/DiscoveryQueriesTile'
 import { SearchFiltersTile } from './tiles/SearchFiltersTile'
-import { LocationFilterTile } from './tiles/LocationFilterTile'
 import { ProofPointsTile } from './tiles/ProofPointsTile'
 import { PdfGateTile } from './tiles/PdfGateTile'
 
@@ -79,10 +78,9 @@ export function ConfigBento() {
                     )}
                     {id === 'scanner' && (
                       <>
-                        <BroadDiscoveryTile />
                         <SearchFiltersTile />
+                        <BroadDiscoveryTile />
                         <CompanyWatchlistTile />
-                        <LocationFilterTile />
                         <DiscoveryQueriesTile />
                       </>
                     )}

@@ -1,12 +1,25 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Paper, Group, Text, Stack, Badge, Center, Loader, Tooltip } from '@mantine/core'
+import {
+  Paper,
+  Group,
+  Text,
+  Stack,
+  Badge,
+  Center,
+  Loader,
+  Tooltip,
+  NativeSelect,
+  Divider,
+} from '@mantine/core'
 import { TagInput } from '../../TagInput'
 import { SaveIndicator } from '../../SaveIndicator'
 import { useDebouncedCallback } from '../../../../hooks/useDebouncedCallback'
 import { useRoleDerivedTitles } from '../../../../providers/RoleTargetsProvider'
 import type { SaveStatus } from '../../SaveIndicator'
+
+type MinScore = '' | 'A' | 'B' | 'C' | 'D' | 'F'
 
 type TitleFilter = {
   derived: string[]
@@ -15,20 +28,39 @@ type TitleFilter = {
   seniorityBoost: string[]
 }
 
+type LocationFilter = {
+  derived: string[]
+  alwaysAllow: string[]
+  allow: string[]
+  block: string[]
+}
+
 type SearchFiltersForm = {
+  minScore: MinScore
   titleFilter: TitleFilter
+  locationFilter: LocationFilter
 }
 
 const DEFAULT_SENIORITY_BOOST = ['Senior', 'Staff', 'Principal', 'Lead', 'Head', 'Director']
 
-function parseSearchFilters(raw: Record<string, unknown> | null): SearchFiltersForm {
+function parseForm(raw: Record<string, unknown> | null): SearchFiltersForm {
   const tf = raw?.titleFilter as TitleFilter | undefined
+  const lf = raw?.locationFilter as LocationFilter | undefined
   return {
+    minScore: (raw?.minScore as MinScore) ?? '',
     titleFilter: {
       derived: Array.isArray(tf?.derived) ? tf.derived : [],
       custom: Array.isArray(tf?.custom) ? tf.custom : [],
       negative: Array.isArray(tf?.negative) ? tf.negative : [],
-      seniorityBoost: Array.isArray(tf?.seniorityBoost) ? tf.seniorityBoost : DEFAULT_SENIORITY_BOOST,
+      seniorityBoost: Array.isArray(tf?.seniorityBoost)
+        ? tf.seniorityBoost
+        : DEFAULT_SENIORITY_BOOST,
+    },
+    locationFilter: {
+      derived: Array.isArray(lf?.derived) ? lf.derived : [],
+      alwaysAllow: Array.isArray(lf?.alwaysAllow) ? lf.alwaysAllow : [],
+      allow: Array.isArray(lf?.allow) ? lf.allow : [],
+      block: Array.isArray(lf?.block) ? lf.block : [],
     },
   }
 }
@@ -57,8 +89,8 @@ export function SearchFiltersTile() {
   useEffect(() => {
     fetch('/api/config/discovery')
       .then((r) => r.json())
-      .then(({ data }) => setForm(parseSearchFilters(data)))
-      .catch(() => setForm(parseSearchFilters(null)))
+      .then(({ data }) => setForm(parseForm(data)))
+      .catch(() => setForm(parseForm(null)))
   }, [])
 
   useEffect(() => {
@@ -74,10 +106,16 @@ export function SearchFiltersTile() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          minScore: data.minScore || null,
           titleFilter: {
             custom: data.titleFilter.custom,
             negative: data.titleFilter.negative,
             seniorityBoost: data.titleFilter.seniorityBoost,
+          },
+          locationFilter: {
+            alwaysAllow: data.locationFilter.alwaysAllow,
+            allow: data.locationFilter.allow,
+            block: data.locationFilter.block,
           },
         }),
       })
@@ -90,12 +128,40 @@ export function SearchFiltersTile() {
     }
   }, 500)
 
+  const handleMinScoreChange = useCallback(
+    (value: string) => {
+      setForm((prev) => {
+        if (!prev) return prev
+        const updated = { ...prev, minScore: value as MinScore }
+        debouncedSave(updated)
+        return updated
+      })
+    },
+    [debouncedSave],
+  )
+
   const handleTitleFilterChange = useCallback(
     (patch: Partial<TitleFilter>) => {
       setForm((prev) => {
         if (!prev) return prev
         const updated: SearchFiltersForm = {
+          ...prev,
           titleFilter: { ...prev.titleFilter, ...patch },
+        }
+        debouncedSave(updated)
+        return updated
+      })
+    },
+    [debouncedSave],
+  )
+
+  const handleLocationChange = useCallback(
+    (patch: Partial<Omit<LocationFilter, 'derived'>>) => {
+      setForm((prev) => {
+        if (!prev) return prev
+        const updated: SearchFiltersForm = {
+          ...prev,
+          locationFilter: { ...prev.locationFilter, ...patch },
         }
         debouncedSave(updated)
         return updated
@@ -119,6 +185,20 @@ export function SearchFiltersTile() {
         </Center>
       ) : (
         <Stack gap={24}>
+          <NativeSelect
+            label="Minimum Score"
+            value={form.minScore}
+            onChange={(e) => handleMinScoreChange(e.target.value)}
+            data={[
+              { value: '', label: 'Any score' },
+              ...(['A', 'B', 'C', 'D', 'F'] as const).map((score) => ({
+                value: score,
+                label: `${score} or higher`,
+              })),
+            ]}
+            styles={{ label: LABEL_STYLES }}
+          />
+
           <Stack gap={8}>
             <Text style={LABEL_STYLES}>Include jobs with these titles</Text>
             {derivedTitles.length > 0 && (
@@ -168,6 +248,73 @@ export function SearchFiltersTile() {
             />
             <Text size="xs" c="dimmed" mt={2}>
               Jobs with these prefixes rank higher but aren't required to match.
+            </Text>
+          </Stack>
+
+          <Divider label="Location" labelPosition="left" />
+
+          {form.locationFilter.derived.length > 0 && (
+            <Stack gap={8}>
+              <Text style={LABEL_STYLES}>Location hints from your profile</Text>
+              <Group gap={6} wrap="wrap">
+                {form.locationFilter.derived.map((hint) => (
+                  <Tooltip
+                    key={hint}
+                    label="Synced from your work preferences"
+                    position="top"
+                    withArrow
+                    fz="xs"
+                  >
+                    <Badge
+                      variant="light"
+                      color="blue"
+                      size="sm"
+                      leftSection={<LockIcon />}
+                      style={{ cursor: 'default', userSelect: 'none' }}
+                    >
+                      {hint}
+                    </Badge>
+                  </Tooltip>
+                ))}
+              </Group>
+            </Stack>
+          )}
+
+          <Stack gap={4}>
+            <TagInput
+              label="Always Allow"
+              value={form.locationFilter.alwaysAllow}
+              onChange={(v) => handleLocationChange({ alwaysAllow: v })}
+              placeholder="e.g. Remote, United States"
+              color="teal"
+            />
+            <Text size="xs" c="dimmed" mt={2}>
+              These locations always pass, even if on the block list.
+            </Text>
+          </Stack>
+
+          <Stack gap={4}>
+            <TagInput
+              label="Allow"
+              value={form.locationFilter.allow}
+              onChange={(v) => handleLocationChange({ allow: v })}
+              placeholder="e.g. Europe, Canada"
+            />
+            <Text size="xs" c="dimmed" mt={2}>
+              If set, jobs must match at least one. Empty means all locations pass.
+            </Text>
+          </Stack>
+
+          <Stack gap={4}>
+            <TagInput
+              label="Block"
+              value={form.locationFilter.block}
+              onChange={(v) => handleLocationChange({ block: v })}
+              placeholder="e.g. China, requires relocation"
+              color="red"
+            />
+            <Text size="xs" c="dimmed" mt={2}>
+              Jobs matching these are excluded unless rescued by Always Allow.
             </Text>
           </Stack>
         </Stack>
