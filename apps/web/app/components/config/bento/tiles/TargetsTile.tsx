@@ -102,12 +102,13 @@ function PresetRow({
   onToggle: (id: Platform, enabled: boolean) => void
 }) {
   return (
-    <Group gap={12} align="center" py={4}>
+    <Group gap={12} align="center" py={4} data-testid={`preset-${platform.id}`}>
       <Switch
         checked={enabled}
         onChange={(e) => onToggle(platform.id, e.currentTarget.checked)}
         size="xs"
         aria-label={enabled ? `Disable ${platform.label}` : `Enable ${platform.label}`}
+        data-testid={`preset-${platform.id}-toggle`}
       />
       <Box style={{ flex: 1, minWidth: 0 }}>
         <Group gap={6} align="center">
@@ -383,6 +384,7 @@ function AddTargetForm({ onAdd }: { onAdd: (fields: AddFields) => Promise<void> 
           value={method}
           onChange={(e) => setMethod(e.target.value as Method)}
           data={METHOD_OPTIONS}
+          data-testid="method-select"
         />
         <TextInput
           label="Notes"

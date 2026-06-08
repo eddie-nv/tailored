@@ -18,7 +18,7 @@ export function SaveIndicator({ status }: Props) {
         : '#ef4444'
 
   return (
-    <Text component="span" role="status" aria-live="polite" fz={11} fw={500} c={color}>
+    <Text component="span" role="status" aria-live="polite" fz={11} fw={500} c={color} data-testid="save-indicator">
       {label}
     </Text>
   )

@@ -9,9 +9,10 @@ type Props = {
   placeholder?: string
   id?: string
   color?: string
+  'data-testid'?: string
 }
 
-export function TagInput({ label, value, onChange, placeholder = 'Type and press Enter', id, color }: Props) {
+export function TagInput({ label, value, onChange, placeholder = 'Type and press Enter', id, color, 'data-testid': testId }: Props) {
   return (
     <TagsInput
       id={id}
@@ -21,6 +22,7 @@ export function TagInput({ label, value, onChange, placeholder = 'Type and press
       placeholder={value.length === 0 ? placeholder : ''}
       splitChars={[',']}
       color={color}
+      data-testid={testId}
       styles={{
         label: {
           fontSize: '0.6875rem',
