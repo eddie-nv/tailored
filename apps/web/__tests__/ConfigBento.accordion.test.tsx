@@ -31,11 +31,8 @@ vi.mock('../app/components/config/bento/tiles/WorkPrefsTile', () => ({
 vi.mock('../app/components/config/bento/tiles/ProofPointsTile', () => ({
   ProofPointsTile: () => <div data-testid="tile-proof-points" />,
 }))
-vi.mock('../app/components/config/bento/tiles/BroadDiscoveryTile', () => ({
-  BroadDiscoveryTile: () => <div data-testid="tile-broad-discovery" />,
-}))
-vi.mock('../app/components/config/bento/tiles/CompanyWatchlistTile', () => ({
-  CompanyWatchlistTile: () => <div data-testid="tile-company-watchlist" />,
+vi.mock('../app/components/config/bento/tiles/TargetsTile', () => ({
+  TargetsTile: () => <div data-testid="tile-targets" />,
 }))
 vi.mock('../app/components/config/bento/tiles/DiscoveryQueriesTile', () => ({
   DiscoveryQueriesTile: () => <div data-testid="tile-discovery-queries" />,
@@ -84,7 +81,7 @@ describe('ConfigBento — accordion structure', () => {
 
   it('Scanner and CV drawers are closed by default when no URL param is set', () => {
     render(<Wrapper />)
-    expect(screen.queryByTestId('tile-broad-discovery')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('tile-targets')).not.toBeInTheDocument()
     expect(screen.queryByTestId('tile-cv-output')).not.toBeInTheDocument()
   })
 })
@@ -103,7 +100,7 @@ describe('ConfigBento — URL param hydration', () => {
       key === 'open' ? 'scanner' : null,
     )
     render(<Wrapper />)
-    expect(screen.getByTestId('tile-broad-discovery')).toBeInTheDocument()
+    expect(screen.getByTestId('tile-targets')).toBeInTheDocument()
     expect(screen.queryByTestId('tile-identity')).not.toBeInTheDocument()
   })
 
@@ -122,7 +119,7 @@ describe('ConfigBento — URL param hydration', () => {
     )
     render(<Wrapper />)
     expect(screen.getByTestId('tile-identity')).toBeInTheDocument()
-    expect(screen.getByTestId('tile-broad-discovery')).toBeInTheDocument()
+    expect(screen.getByTestId('tile-targets')).toBeInTheDocument()
     expect(screen.queryByTestId('tile-cv-output')).not.toBeInTheDocument()
   })
 })
@@ -137,7 +134,7 @@ describe('ConfigBento — multiple open (independent drawers)', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('tile-identity')).toBeInTheDocument()
-      expect(screen.getByTestId('tile-broad-discovery')).toBeInTheDocument()
+      expect(screen.getByTestId('tile-targets')).toBeInTheDocument()
     })
   })
 
@@ -153,7 +150,7 @@ describe('ConfigBento — multiple open (independent drawers)', () => {
 
     await waitFor(() => {
       expect(screen.queryByTestId('tile-identity')).not.toBeInTheDocument()
-      expect(screen.getByTestId('tile-broad-discovery')).toBeInTheDocument()
+      expect(screen.getByTestId('tile-targets')).toBeInTheDocument()
     })
   })
 })
@@ -209,9 +206,9 @@ describe('ConfigBento — tile content per section', () => {
     )
     render(<Wrapper />)
     expect(screen.getByTestId('tile-search-filters')).toBeInTheDocument()
-    expect(screen.getByTestId('tile-broad-discovery')).toBeInTheDocument()
-    expect(screen.getByTestId('tile-company-watchlist')).toBeInTheDocument()
+    expect(screen.getByTestId('tile-targets')).toBeInTheDocument()
     expect(screen.getByTestId('tile-discovery-queries')).toBeInTheDocument()
+    expect(screen.queryByTestId('tile-company-watchlist')).not.toBeInTheDocument()
     expect(screen.queryByTestId('tile-location-filter')).not.toBeInTheDocument()
   })
 
