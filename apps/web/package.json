@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@ag-ui/client": "^0.0.54",
@@ -41,6 +42,7 @@
     "jsdom": "^29.1.1",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
+    "@playwright/test": "^1.49.0",
     "typescript": "^5",
     "vitest": "^3.2.0"
   }

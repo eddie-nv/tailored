@@ -197,6 +197,7 @@ export function SearchFiltersTile() {
               })),
             ]}
             styles={{ label: LABEL_STYLES }}
+            data-testid="min-score-select"
           />
 
           <Stack gap={8}>
@@ -299,6 +300,7 @@ export function SearchFiltersTile() {
               value={form.locationFilter.allow}
               onChange={(v) => handleLocationChange({ allow: v })}
               placeholder="e.g. Europe, Canada"
+              data-testid="location-allow-input"
             />
             <Text size="xs" c="dimmed" mt={2}>
               If set, jobs must match at least one. Empty means all locations pass.
