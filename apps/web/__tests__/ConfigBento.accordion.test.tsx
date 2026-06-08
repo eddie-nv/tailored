@@ -43,9 +43,6 @@ vi.mock('../app/components/config/bento/tiles/DiscoveryQueriesTile', () => ({
 vi.mock('../app/components/config/bento/tiles/SearchFiltersTile', () => ({
   SearchFiltersTile: () => <div data-testid="tile-search-filters" />,
 }))
-vi.mock('../app/components/config/bento/tiles/LocationFilterTile', () => ({
-  LocationFilterTile: () => <div data-testid="tile-location-filter" />,
-}))
 vi.mock('../app/components/config/bento/tiles/CvOutputTile', () => ({
   CvOutputTile: () => <div data-testid="tile-cv-output" />,
 }))
@@ -206,16 +203,16 @@ describe('ConfigBento — tile content per section', () => {
     expect(screen.getByTestId('tile-proof-points')).toBeInTheDocument()
   })
 
-  it('Scanner drawer renders all five scanner tiles', async () => {
+  it('Scanner drawer renders all four scanner tiles', async () => {
     mockSearchParams.get.mockImplementation((key: string) =>
       key === 'open' ? 'scanner' : null,
     )
     render(<Wrapper />)
-    expect(screen.getByTestId('tile-broad-discovery')).toBeInTheDocument()
     expect(screen.getByTestId('tile-search-filters')).toBeInTheDocument()
+    expect(screen.getByTestId('tile-broad-discovery')).toBeInTheDocument()
     expect(screen.getByTestId('tile-company-watchlist')).toBeInTheDocument()
-    expect(screen.getByTestId('tile-location-filter')).toBeInTheDocument()
     expect(screen.getByTestId('tile-discovery-queries')).toBeInTheDocument()
+    expect(screen.queryByTestId('tile-location-filter')).not.toBeInTheDocument()
   })
 
   it('CV drawer renders two CV tiles', async () => {
